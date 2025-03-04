@@ -1,6 +1,6 @@
 # Movie Randomizer
 
-Bem-vindo ao Movie Randomizer, um projeto web divertido que utiliza HTML, CSS, JavaScript, Bootstrap e a API do TMDB (The Movie Database) para oferecer sugestões aleatórias de filmes. Este site é uma ótima maneira de descobrir novos filmes e encontrar algo emocionante para assistir quando você está indeciso, clique [aqui](https://richardtavares.github.io/movie-randomizer/) para testar.
+Bem-vindo ao Movie Randomizer, um projeto web divertido que utiliza HTML, CSS, JavaScript, Bootstrap e a API do TMDB (The Movie Database) para oferecer sugestões aleatórias de filmes. Este site é uma ótima maneira de descobrir novos filmes e encontrar algo emocionante para assistir quando você está indeciso, clique [aqui](https://richard-tavares.github.io/movie-randomizer/) para testar.
 
 ## Screenshot
 
@@ -34,4 +34,4 @@ O projeto está organizado da seguinte forma:
 
 ## Autor
 
-[RichardTavares](https://github.com/RichardTavares)
+[@richard-tavares](https://github.com/richard-tavares)
