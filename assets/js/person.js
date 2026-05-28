@@ -12,7 +12,15 @@ async function initPersonPage() {
     const person = detail.status === 'fulfilled' ? detail.value : null;
     if (!person) throw new Error('Pessoa não encontrada.');
 
-    document.title = `${person.name} — Movie Randomizer`;
+    const bioText = person.biography || '';
+    const bioTruncated = bioText.length > 155 ? bioText.slice(0, 155) + '…' : bioText;
+    const bio = bioTruncated || `${person.name} — Movie Randomizer`;
+    setPageMeta({
+      title: `${person.name} — Movie Randomizer`,
+      description: bio,
+      image: posterUrl(person.profile_path, 'LG'),
+      url: globalThis.location.href,
+    });
     _renderProfile(person);
     _renderWorks(credits.value);
   } catch {

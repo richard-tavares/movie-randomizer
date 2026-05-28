@@ -28,7 +28,17 @@
     _renderSimilar(similar.value, item, contentType);
 
     const displayTitle = item.title || item.name || 'Título';
-    document.title = `${displayTitle} — Movie Randomizer`;
+    const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+    const typeLabel = CONTENT_TYPE_META[contentType]?.label || 'Filme';
+    const desc = item.overview
+      ? item.overview.slice(0, 155) + (item.overview.length > 155 ? '…' : '')
+      : `${typeLabel} — Movie Randomizer`;
+    setPageMeta({
+      title: `${displayTitle}${year ? ` (${year})` : ''} — Movie Randomizer`,
+      description: desc,
+      image: posterUrl(item.poster_path, 'LG'),
+      url: globalThis.location.href,
+    });
   } catch (err) {
     console.error('Title page error:', err);
     document.getElementById('titleContent')?.insertAdjacentHTML('afterbegin', `

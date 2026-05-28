@@ -112,6 +112,28 @@ function formatDate(dateStr) {
   } catch { return dateStr; }
 }
 
+function setPageMeta({ title, description, image, url } = {}) {
+  const setMeta = (sel, attr, val) => document.querySelector(sel)?.setAttribute(attr, val);
+  if (title) {
+    document.title = title;
+    setMeta('meta[property="og:title"]', 'content', title);
+    setMeta('meta[name="twitter:title"]', 'content', title);
+  }
+  if (description) {
+    setMeta('meta[name="description"]', 'content', description);
+    setMeta('meta[property="og:description"]', 'content', description);
+    setMeta('meta[name="twitter:description"]', 'content', description);
+  }
+  if (image) {
+    setMeta('meta[property="og:image"]', 'content', image);
+    setMeta('meta[name="twitter:image"]', 'content', image);
+  }
+  if (url) {
+    setMeta('meta[property="og:url"]', 'content', url);
+    setMeta('link[rel="canonical"]', 'href', url);
+  }
+}
+
 function formatMoney(amount) {
   if (amount >= 1e9) return `$${+(amount / 1e9).toFixed(1)}B`;
   if (amount >= 1e6) return `$${+(amount / 1e6).toFixed(1)}M`;
