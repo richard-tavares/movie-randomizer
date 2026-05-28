@@ -112,6 +112,12 @@ function formatDate(dateStr) {
   } catch { return dateStr; }
 }
 
+function formatMoney(amount) {
+  if (amount >= 1e9) return `$${+(amount / 1e9).toFixed(1)}B`;
+  if (amount >= 1e6) return `$${+(amount / 1e6).toFixed(1)}M`;
+  return `$${amount.toLocaleString('en-US')}`;
+}
+
 function getCertification(movie) {
   if (typeof movie._cert === 'string') return movie._cert;
   const results = movie.release_dates?.results || [];

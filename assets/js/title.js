@@ -144,8 +144,8 @@ function _buildMovieRows(item, credits) {
   const writers = credits?.crew?.filter(p => ['Screenplay', 'Writer', 'Story'].includes(p.job)).slice(0, 3);
   if (director) rows.push({ k: 'Direção', v: director.name });
   if (writers?.length) rows.push({ k: 'Roteiro', v: writers.map(w => w.name).join(', ') });
-  if (item.budget > 0) rows.push({ k: 'Orçamento', v: `$${(item.budget / 1e6).toFixed(0)}M` });
-  if (item.revenue > 0) rows.push({ k: 'Bilheteria', v: `$${(item.revenue / 1e6).toFixed(0)}M` });
+  if (item.budget > 0) rows.push({ k: 'Orçamento', v: formatMoney(item.budget) });
+  if (item.revenue > 0) rows.push({ k: 'Bilheteria', v: formatMoney(item.revenue) });
   if (item.status) rows.push({ k: 'Status', v: escHtml(item.status) });
   if (item.release_date) rows.push({ k: 'Lançamento', v: formatDate(item.release_date) });
   if (item.production_companies?.length) rows.push({ k: 'Produção', v: item.production_companies.slice(0, 2).map(c => escHtml(c.name)).join(', ') });
