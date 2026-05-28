@@ -226,7 +226,7 @@ async function _fetch() {
   const countEl = document.getElementById('exploreCount');
   if (!grid) return;
 
-  grid.innerHTML = '<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div></div>';
+  grid.innerHTML = '<div class="loading-state" role="status" aria-label="Carregando" style="grid-column:1/-1"><div class="spinner"></div></div>';
   if (countEl) countEl.textContent = '';
 
   try {
@@ -305,7 +305,7 @@ function _renderPagination() {
 
   const pages = _pagesToShow(cur, total);
   let html = `
-  <button class="page-btn" ${cur <= 1 ? 'disabled' : ''} data-page="${cur - 1}">
+  <button class="page-btn" ${cur <= 1 ? 'disabled' : ''} data-page="${cur - 1}" aria-label="Página anterior">
     <i class="ph ph-caret-left"></i>
   </button>`;
 
@@ -318,7 +318,7 @@ function _renderPagination() {
   });
 
   html += `
-  <button class="page-btn" ${cur >= total ? 'disabled' : ''} data-page="${cur + 1}">
+  <button class="page-btn" ${cur >= total ? 'disabled' : ''} data-page="${cur + 1}" aria-label="Próxima página">
     <i class="ph ph-caret-right"></i>
   </button>`;
   nav.innerHTML = html;

@@ -236,7 +236,7 @@
     API.setAbortSignal(_controller.signal);
     activeType = type;
     loading = true;
-    contentEl.innerHTML = `<div class="loading-state"><div class="spinner"></div></div>`;
+    contentEl.innerHTML = `<div class="loading-state" role="status" aria-label="Carregando"><div class="spinner"></div></div>`;
   }
 
   function _endLoad() {

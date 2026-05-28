@@ -22,6 +22,11 @@ const CustomSelect = (() => {
     trigger.className = 'csel-trigger';
     trigger.setAttribute('aria-haspopup', 'listbox');
     trigger.setAttribute('aria-expanded', 'false');
+    const associatedLabel = selectEl.id
+      ? document.querySelector(`label[for="${selectEl.id}"]`)?.textContent?.trim()
+      : null;
+    const triggerLabel = associatedLabel || selectEl.getAttribute('aria-label') || selectEl.title;
+    if (triggerLabel) trigger.setAttribute('aria-label', triggerLabel);
 
     const label = document.createElement('span');
     label.className = 'csel-label';

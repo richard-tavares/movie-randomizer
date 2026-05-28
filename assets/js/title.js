@@ -308,8 +308,9 @@ function _renderCast(credits) {
   track.innerHTML = '';
   cast.forEach(person => {
     const photo = `${CONFIG.IMG_MD}${person.profile_path}`;
-    const el = document.createElement('div');
+    const el = document.createElement('a');
     el.className = 'cast-card';
+    el.href = `person.html?id=${person.id}`;
     el.innerHTML = `
       <div class="cast-photo">
         <img src="${photo}" alt="${escHtml(person.name)}" loading="lazy">
@@ -317,7 +318,6 @@ function _renderCast(credits) {
       <div class="cast-name">${escHtml(person.name)}</div>
       <div class="cast-character">${escHtml(person.character || person.roles?.[0]?.character || '')}</div>
     `;
-    el.addEventListener('click', () => { globalThis.location.href = `person.html?id=${person.id}`; });
     track.appendChild(el);
   });
 

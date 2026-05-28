@@ -156,6 +156,7 @@ function initVibeSelector() {
       const btn = document.createElement('button');
       btn.className = 'vibe-card';
       btn.dataset.vibe = key;
+      btn.setAttribute('aria-label', `${vibe.label}: ${vibe.desc}`);
       btn.innerHTML = `
         <span class="vibe-icon"><i class="ph ${vibe.icon}"></i></span>
         <span class="vibe-label">${vibe.label}</span>
@@ -458,7 +459,7 @@ async function _initAiringSection(trackId, fetchFn, emptyMsg) {
   const track = document.getElementById(trackId);
   if (!track) return;
 
-  track.innerHTML = '<div class="loading-state"><div class="spinner"></div></div>';
+  track.innerHTML = '<div class="loading-state" role="status" aria-label="Carregando"><div class="spinner"></div></div>';
 
   try {
     const data = await fetchFn();

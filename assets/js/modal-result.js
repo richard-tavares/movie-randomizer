@@ -5,10 +5,13 @@ const RandResult = (() => {
     const el = document.createElement('div');
     el.className = 'modal-overlay';
     el.id = 'randResultModal';
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-modal', 'true');
+    el.setAttribute('aria-labelledby', 'randResultModalTitle');
     el.innerHTML = `
       <div class="modal-box">
         <div class="modal-header">
-          <div class="modal-title"><i class="ph ph-dice-five"></i> Sorteamos para você!</div>
+          <div class="modal-title" id="randResultModalTitle"><i class="ph ph-dice-five"></i> Sorteamos para você!</div>
           <button class="modal-close" aria-label="Fechar"><i class="ph ph-x"></i></button>
         </div>
         <div class="modal-body">
@@ -158,6 +161,7 @@ const RandResult = (() => {
 
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
+    overlay.querySelector('.modal-close')?.focus();
   }
 
   function close() {
