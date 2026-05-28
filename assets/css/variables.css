@@ -1,0 +1,117 @@
+﻿@property --rand-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+:root {
+  --clr-bg: #0a0a0b;
+  --clr-bg-2: #0f0f12;
+  --clr-surface: #111114;
+  --clr-surface-2: #18181c;
+  --clr-surface-3: #1e1e23;
+  --clr-surface-4: #252529;
+
+  --clr-border: rgba(255, 255, 255, 0.07);
+  --clr-border-hover: rgba(255, 255, 255, 0.14);
+  --clr-overlay-soft: rgba(255, 255, 255, 0.05);
+  --clr-overlay-dark: rgba(0, 0, 0, 0.75);
+
+  --clr-primary: #6e2870;
+  --clr-primary-light: #9a45a0;
+  --clr-primary-dark: #4a1850;
+  --clr-secondary: #ff037b;
+  --gradient: linear-gradient(45deg, #6e2870, #9200eb, #ff037b, #ff5b0d);
+  --glow: rgba(110, 40, 112, 0.6);
+  --glow-accent: rgba(208, 64, 160, 0.45);
+
+  --clr-gold: #f5c518;
+  --clr-gold-bg: rgba(245, 197, 24, 0.12);
+  --clr-success: #22c55e;
+  --clr-danger: #ef4444;
+  --clr-info: #3b82f6;
+
+  --clr-text: #f0f0f8;
+  --clr-text-2: #9898b8;
+  --clr-text-3: #56566e;
+
+  --font-display: 'Bebas Neue', 'Impact', sans-serif;
+  --font-heading: 'Outfit', 'Inter', sans-serif;
+  --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+  --text-7xl: 4.5rem;
+
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
+  --sp-20: 5rem;
+  --sp-24: 6rem;
+
+  --navbar-height: 72px;
+  --container-max: 1600px;
+  --section-x: clamp(var(--sp-6), 4vw, var(--sp-16));
+
+  --card-w: clamp(140px, 11vw, 190px);
+  --card-w-lg: clamp(200px, 15vw, 280px);
+  --card-ratio: 2/3;
+
+  --radius-xs: 3px;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 36px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 16px 56px rgba(0, 0, 0, 0.75);
+  --shadow-2xl: 0 24px 80px rgba(0, 0, 0, 0.8);
+
+  --t-fast: 100ms ease;
+  --t: 220ms ease;
+  --t-slow: 380ms ease;
+  --t-spring: 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --z-below: -1;
+  --z-base: 1;
+  --z-raised: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-navbar: 500;
+  --z-modal: 1000;
+  --z-toast: 2000;
+}
+
+@media (max-width: 480px) {
+  :root {
+    --section-x: var(--sp-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-fast: 0ms;
+    --t: 0ms;
+    --t-slow: 0ms;
+    --t-spring: 0ms;
+  }
+}

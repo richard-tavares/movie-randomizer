@@ -1,0 +1,132 @@
+.person-hero {
+  height: 220px;
+  background: linear-gradient(135deg, var(--clr-primary-dark) 0%, var(--clr-bg-2) 60%, var(--clr-bg) 100%);
+  position: relative;
+}
+
+.person-content {
+  position: relative;
+  z-index: 1;
+  padding: 0 var(--section-x) var(--sp-4);
+  max-width: calc(var(--container-max) + 2 * var(--section-x));
+  margin: 0 auto;
+}
+
+.person-profile {
+  display: flex;
+  gap: var(--sp-8);
+  align-items: flex-start;
+  margin-top: -80px;
+}
+
+.person-photo-wrap {
+  flex-shrink: 0;
+  width: 160px;
+  aspect-ratio: 2/3;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--clr-surface-2);
+  border: 3px solid var(--clr-bg);
+  box-shadow: var(--shadow-xl);
+}
+
+.person-photo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.person-info {
+  min-width: 0;
+}
+
+.person-name {
+  font-family: var(--font-heading);
+  font-size: clamp(var(--text-2xl), 3vw, var(--text-4xl));
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: var(--sp-3);
+}
+
+.person-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  font-size: var(--text-sm);
+  color: var(--clr-text-2);
+  margin-bottom: var(--sp-6);
+}
+
+.person-meta span {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.person-meta i {
+  color: var(--clr-text-3);
+  font-size: 1rem;
+}
+
+.person-bio-section {
+  max-width: 700px;
+}
+
+.person-bio {
+  font-size: var(--text-sm);
+  color: var(--clr-text-2);
+  line-height: 1.8;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.person-works-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-w), 1fr));
+  gap: var(--sp-4);
+}
+
+.person-works-grid .content-card {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .person-profile {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: -60px;
+  }
+
+  .person-photo-wrap {
+    width: 120px;
+  }
+
+  .person-info {
+    padding-top: 0;
+    width: 100%;
+  }
+
+  .person-meta {
+    justify-content: center;
+  }
+
+  .person-bio-section {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .person-hero {
+    height: 160px;
+  }
+
+  .person-works-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--sp-3);
+  }
+}

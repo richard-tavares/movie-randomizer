@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pessoas — Movie Randomizer">
+    <title>Carregando... — Movie Randomizer</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
+
+    <link rel="stylesheet" href="assets/css/variables.css">
+    <link rel="stylesheet" href="assets/css/base.css">
+    <link rel="stylesheet" href="assets/css/animations.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/layout.css">
+    <link rel="stylesheet" href="assets/css/person.css">
+
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/img/favicon-96x96.png" sizes="96x96" type="image/png">
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+  </head>
+
+  <body>
+
+    <div id="app-navbar"></div>
+
+    <main id="personContent" class="page-content">
+
+      <div class="person-hero"></div>
+
+      <div class="person-content">
+        <div class="person-profile">
+          <div class="person-photo-wrap">
+            <img id="personPhoto" src="" alt="" loading="eager">
+          </div>
+          <div class="person-info">
+            <h1 class="person-name" id="personName">Carregando...</h1>
+            <div class="person-meta" id="personMeta"></div>
+            <div class="person-bio-section" id="personBioSection">
+              <div class="movie-section-label">Biografia</div>
+              <p class="person-bio" id="personBio"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="section" id="worksSection" aria-labelledby="worksTitle">
+        <div class="section-header">
+          <h2 class="section-title" id="worksTitle">
+            <span class="section-title-icon">
+              <i class="ph ph-video"></i>
+            </span> Conhecido por
+          </h2>
+        </div>
+        <div class="person-works-grid" id="personWorksGrid"></div>
+      </section>
+
+    </main>
+
+    <footer id="app-footer"></footer>
+
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/watchlist.js"></script>
+    <script src="assets/js/modal-watchlist.js"></script>
+    <script src="assets/js/modal-trailer.js"></script>
+    <script src="assets/js/carousel.js"></script>
+    <script src="assets/js/person.js"></script>
+
+  </body>
+
+</html>

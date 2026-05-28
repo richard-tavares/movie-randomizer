@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Próximos lançamentos de filmes, séries e animes — Movie Randomizer">
+    <title>Em Breve — Movie Randomizer</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
+
+    <link rel="stylesheet" href="assets/css/variables.css">
+    <link rel="stylesheet" href="assets/css/base.css">
+    <link rel="stylesheet" href="assets/css/animations.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/layout.css">
+    <link rel="stylesheet" href="assets/css/upcoming.css">
+
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/img/favicon-96x96.png" sizes="96x96" type="image/png">
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+  </head>
+
+  <body>
+
+    <div id="app-navbar"></div>
+
+    <main class="page-content">
+      <div class="section upcoming-page">
+
+        <div class="section-header">
+          <h1 class="section-title">
+            <span class="section-title-icon">
+              <i class="ph-fill ph-calendar-dots"></i>
+            </span>
+            Em Breve
+          </h1>
+        </div>
+
+        <div class="upcoming-toolbar">
+          <div class="segmented-control" id="upcomingTypeGroup">
+            <button class="segmented-control-btn active" data-type="movie">
+              <i class="ph-fill ph-film-slate"></i>
+              Filmes
+            </button>
+            <button class="segmented-control-btn" data-type="tv">
+              <i class="ph-fill ph-television"></i>
+              Séries
+            </button>
+            <button class="segmented-control-btn" data-type="anime">
+              <i class="ph-fill ph-star-four"></i>
+              Animes
+            </button>
+          </div>
+        </div>
+
+        <div id="upcomingContent">
+          <div class="loading-state">
+            <div class="spinner"></div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer id="app-footer"></footer>
+
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/watchlist.js"></script>
+    <script src="assets/js/modal-watchlist.js"></script>
+    <script src="assets/js/modal-trailer.js"></script>
+    <script src="assets/js/modal-result.js"></script>
+    <script src="assets/js/carousel.js"></script>
+    <script src="assets/js/randomizer.js"></script>
+    <script src="assets/js/upcoming.js"></script>
+
+  </body>
+
+</html>

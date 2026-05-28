@@ -1,36 +1,42 @@
-# Movie Randomizer
+# MovieRandomizer
 
-Bem-vindo ao Movie Randomizer, um projeto web divertido que utiliza HTML, CSS, JavaScript, Bootstrap e a API do TMDB (The Movie Database) para oferecer sugestões aleatórias de filmes. Este site é uma ótima maneira de descobrir novos filmes e encontrar algo emocionante para assistir quando você está indeciso, clique [aqui](https://richard-tavares.github.io/movie-randomizer/) para testar.
+Plataforma de descoberta de filmes, séries e animes. Explore catálogos, encontre conteúdo pela sua vibe do momento, use o sorteador inteligente com filtros avançados e gerencie suas listas, tudo em um só lugar.
 
-## Screenshot
+Acesse em: [richard-tavares.github.io/movie-randomizer](https://richard-tavares.github.io/movie-randomizer/)
 
-![Screenshot do Projeto](screenshot.png)
+## Funcionalidades
 
-## Como Funciona
+- **Sorteador Inteligente** — sorteia filmes, séries e animes com filtros de gênero, ano, nota, plataforma, país e classificação indicativa
+- **Explorar** — catálogo completo com sidebar de filtros, busca por nome e paginação
+- **Vibes** — 12 estados de espírito que mapeiam para recomendações (Nostálgica, Sombria, Romântica, Frenética...)
+- **Sugestão do Dia** — um título diferente a cada dia, selecionado entre os mais bem avaliados e populares
+- **Em Breve** — lançamentos próximos organizados por mês
+- **Página de Título** — detalhes completos: elenco, títulos similares, onde assistir e trailer
+- **Página de Ator** — filmografia ordenada por nota, filtrada de aparições irrelevantes
+- **Minhas Listas** — salvar e favoritar conteúdos, persistidos no **localStorage**
+- **Busca** — pesquisa em tempo real de filmes e séries direto da navbar
 
-1. **Interface Amigável:** A interface limpa e intuitiva do Movie Randomizer permite uma navegação fácil e agradável.
+## Tecnologias
 
-2. **Randomização de Filmes:** Com a ajuda da API do TMDB, o site gera sugestões aleatórias de filmes a cada clique no botão "Sortear". Nunca foi tão fácil escolher o que assistir!
+- HTML, CSS e JavaScript — sem frameworks
+- [TMDB API](https://developer.themoviedb.org/docs/) — dados de filmes, séries, atores e animes
+- [Phosphor Icons](https://phosphoricons.com/) — iconografia
+- [Google Fonts](https://fonts.google.com/) — Nunito, Outfit, Inter
 
-3. **Detalhes do Filme:** Ao sortear um filme, você terá acesso a detalhes como sinopse, gênero e ano de lançamento.
+## Estrutura
 
-4. **Compatibilidade Móvel:** Desfrute da experiência do Movie Randomizer em qualquer lugar, pois o site é totalmente responsivo, garantindo uma visualização perfeita em dispositivos móveis.
-
-## Tecnologias Utilizadas
-
-- **[HTML](https://developer.mozilla.org/pt-BR/docs/Web/HTML)**
-- **[CSS](https://developer.mozilla.org/pt-BR/docs/Web/CSS)**
-- **[Javascript](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript)**
-- **[Bootstrap](https://getbootstrap.com/docs/)**
-- **[TMDB API](https://developer.themoviedb.org/docs/)**
-
-## Estrutura do Projeto
-
-O projeto está organizado da seguinte forma:
-- `index.html`: Página principal do site.
-- `css/`: Pasta contendo os arquivos de estilo CSS.
-- `js/`: Pasta contendo os arquivos JavaScript.
-- `img/`: Pasta com as imagens utilizadas no site.
+```
+├── index.html              # Página principal
+├── title.html              # Detalhes de um título
+├── person.html             # Filmografia de ator/diretora
+├── explore.html            # Catálogo com filtros
+├── upcoming.html           # Em breve nos cinemas
+├── assets/
+│   ├── css/                # Estilos por módulo
+│   ├── js/                 # Scripts por módulo
+│   └── img/                # Ícones e logos
+└── site.webmanifest        # PWA manifest
+```
 
 ## Autor
 
