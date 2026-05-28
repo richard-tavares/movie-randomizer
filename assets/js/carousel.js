@@ -6,14 +6,19 @@
   const prevBtn = wrap.querySelector('.carousel-btn-prev');
   const nextBtn = wrap.querySelector('.carousel-btn-next');
 
+  let _cachedScrollAmount = scrollAmount;
+  const _ro = new ResizeObserver(() => { _cachedScrollAmount = null; });
+  _ro.observe(trackEl);
+
   function getScrollAmount() {
-    if (scrollAmount) return scrollAmount;
+    if (_cachedScrollAmount) return _cachedScrollAmount;
     const firstCard = trackEl.querySelector('.content-card, .skeleton-card, .cast-card');
     if (!firstCard) return trackEl.clientWidth * 0.75;
     const style = getComputedStyle(trackEl);
     const gap = Number.parseFloat(style.gap) || 16;
     const visible = Math.floor(trackEl.clientWidth / (firstCard.offsetWidth + gap));
-    return (firstCard.offsetWidth + gap) * Math.max(visible - 1, 1);
+    _cachedScrollAmount = (firstCard.offsetWidth + gap) * Math.max(visible - 1, 1);
+    return _cachedScrollAmount;
   }
 
   function updateBtns() {

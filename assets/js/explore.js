@@ -213,6 +213,7 @@ function _clearFilters() {
 }
 
 let _fetchGen = 0;
+let _fetchController = null;
 
 function _go(page) {
   exploreState.page = page;
@@ -222,6 +223,9 @@ function _go(page) {
 
 async function _fetch() {
   const gen = ++_fetchGen;
+  _fetchController?.abort();
+  _fetchController = new AbortController();
+  API.setAbortSignal(_fetchController.signal);
   const grid = document.getElementById('exploreGrid');
   const countEl = document.getElementById('exploreCount');
   if (!grid) return;
@@ -256,7 +260,7 @@ async function _fetch() {
     _renderCount();
     _renderPagination();
   } catch (err) {
-    if (gen !== _fetchGen) return;
+    if (gen !== _fetchGen || err.name === 'AbortError') return;
     console.error('Explore fetch error:', err);
     grid.innerHTML = `
       <div class="loading-state" style="grid-column:1/-1">

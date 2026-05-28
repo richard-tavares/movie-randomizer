@@ -16,7 +16,7 @@ const RandResult = (() => {
         </div>
         <div class="modal-body">
           <div class="rand-result">
-            <div class="rand-result-poster"><img src="" alt="Poster do filme sorteado"></div>
+            <div class="rand-result-poster"><img src="" alt="Poster do filme sorteado" loading="lazy"></div>
             <div class="rand-result-info">
               <div class="rand-result-title"></div>
               <div class="rand-result-meta"></div>
