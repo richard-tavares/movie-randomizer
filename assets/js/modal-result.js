@@ -151,7 +151,8 @@ const RandResult = (() => {
         showToast(err?.message || 'Erro ao sortear.', 'error');
       } finally {
         tryAgainBtn.disabled = false;
-        tryAgainBtn.innerHTML = '<i class="ph ph-dice-five"></i> Sortear Outro';
+        tryAgainBtn.innerHTML = '<span class="rand-dice-wrap"><i class="ph ph-dice-five rand-dice-icon"></i></span><span class="btn-label"> Sortear Outro</span>';
+        initAllDice();
       }
     };
 
