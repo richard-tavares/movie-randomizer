@@ -4,6 +4,8 @@ Plataforma de descoberta de filmes, séries e animes. Explore catálogos, encont
 
 Acesse em: [richard-tavares.github.io/movie-randomizer](https://richard-tavares.github.io/movie-randomizer/)
 
+<img width="1920" height="1080" alt="movie-randomizer" src="https://github.com/user-attachments/assets/92dd2f49-0802-4af0-8950-0b7a10fe3bf7" />
+
 ## Funcionalidades
 
 - **Sorteador Inteligente** — sorteia filmes, séries e animes com filtros de gênero, ano, nota, plataforma, país e classificação indicativa
