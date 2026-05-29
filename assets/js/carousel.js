@@ -66,6 +66,7 @@ async function loadCarousel(trackId, fetchFn, opts = {}) {
       });
     }
   } catch (err) {
+    if (err.name === 'AbortError') return;
     console.warn('Carousel load failed:', err);
     track.innerHTML = `<p class="text-dimmed text-sm" style="padding:1rem">Erro ao carregar. Tente novamente.</p>`;
   }

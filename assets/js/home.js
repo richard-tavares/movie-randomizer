@@ -1,6 +1,7 @@
 ﻿let heroMovies = [];
 let heroIndex = 0;
 let heroTimer = null;
+let _diceRafId = null;
 
 async function initHero() {
   try {
@@ -32,16 +33,18 @@ function renderHero(movie, instant = false) {
     backdrop.style.animation = '';
   }
 
-  if (instant) {
-    backdrop.style.backgroundImage = `url('${url}')`;
-    restartZoom();
-  } else {
-    backdrop.classList.add('fading');
-    setTimeout(() => {
+  if (url) {
+    if (instant) {
       backdrop.style.backgroundImage = `url('${url}')`;
-      backdrop.classList.remove('fading');
       restartZoom();
-    }, 600);
+    } else {
+      backdrop.classList.add('fading');
+      setTimeout(() => {
+        backdrop.style.backgroundImage = `url('${url}')`;
+        backdrop.classList.remove('fading');
+        restartZoom();
+      }, 600);
+    }
   }
 
   if (titleEl) titleEl.textContent = movie.title || movie.name || '';
@@ -82,7 +85,10 @@ function buildHeroDots() {
 }
 
 function updateHeroDot(idx) {
-  document.querySelectorAll('.hero-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+  document.querySelectorAll('.hero-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+    d.setAttribute('aria-current', i === idx ? 'true' : 'false');
+  });
 }
 
 function advanceHero() {
@@ -171,23 +177,25 @@ function initVibeSelector() {
   async function fetchVibe(vibe) {
     const vibeResultsWrap = document.getElementById('vibeResults');
     if (!vibeResultsWrap) return;
+
+    const vibeLabel = VIBES[vibe]?.label ?? '';
     vibeResultsWrap.classList.remove('hidden');
     vibeResultsWrap.innerHTML = `
       <div class="section-header">
         <h2 class="section-title">
           <span class="section-title-icon">
             <i class="ph ${VIBES[vibe]?.icon}"></i>
-          </span> ${VIBES[vibe]?.label}
+          </span> ${vibeLabel}
         </h2>
       </div>
       <div class="carousel-wrap">
-        <button class="carousel-btn carousel-btn-prev" aria-label="Anterior">
+        <button class="carousel-btn carousel-btn-prev" aria-label="${vibeLabel}: anterior">
           <i class="ph ph-caret-left"></i>
         </button>
         <div class="carousel-track-outer">
           <div class="carousel-track" id="vibeTrack"></div>
         </div>
-        <button class="carousel-btn carousel-btn-next" aria-label="Próximo">
+        <button class="carousel-btn carousel-btn-next" aria-label="${vibeLabel}: próximo">
           <i class="ph ph-caret-right"></i>
         </button>
       </div>
@@ -195,6 +203,15 @@ function initVibeSelector() {
 
     const track = document.getElementById('vibeTrack');
     if (!track) return;
+
+    const cacheKey = `mr_vibe_${vibe}`;
+    const cached = sessionGet(cacheKey);
+    if (cached) {
+      cached.forEach(m => track.appendChild(buildCard(m, { lazy: false })));
+      requestAnimationFrame(() => createCarousel(track)?.updateBtns());
+      return;
+    }
+
     track.appendChild(buildSkeletonCards(8));
 
     try {
@@ -205,9 +222,11 @@ function initVibeSelector() {
       const items = (data.results || []).filter(m => m.poster_path);
       track.innerHTML = '';
       if (!items.length) { track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Nenhum filme encontrado.</p>'; return; }
+      sessionSet(cacheKey, items);
       items.forEach(m => track.appendChild(buildCard(m, { lazy: false })));
       requestAnimationFrame(() => createCarousel(track)?.updateBtns());
-    } catch {
+    } catch (err) {
+      if (err.name === 'AbortError') return;
       track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Erro ao carregar.</p>';
     }
   }
@@ -228,6 +247,20 @@ function initVibeSelector() {
 }
 
 let _genreCurrentType = 'movie';
+let _genreGen = 0;
+let _genreController = null;
+
+function _startGenreLoad(track) {
+  _genreController?.abort();
+  _genreController = new AbortController();
+  API.setAbortSignal(_genreController.signal);
+  track.innerHTML = '';
+  track.appendChild(buildSkeletonCards(10));
+}
+
+function _endGenreLoad() {
+  API.clearAbortSignal();
+}
 
 function _buildGenreStrip(contentType) {
   _genreCurrentType = contentType;
@@ -251,20 +284,49 @@ function _buildGenreStrip(contentType) {
       strip.querySelectorAll('.genre-pill').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
 
-      if (contentType === 'anime') {
-        await loadCarousel('genreCarouselTrack', () => API.discoverTV({
-          with_genres: g.id,
-          with_original_language: 'ja',
-          sort_by: 'popularity.desc'
-        }),
-          {
-            type: 'anime',
-            primaryGenre: g.id
-          });
-      } else if (contentType === 'tv') {
-        await loadCarousel('genreCarouselTrack', () => API.getByGenreTV(g.id), { type: 'tv' });
-      } else {
-        await loadCarousel('genreCarouselTrack', () => API.getByGenre(g.id), { primaryGenre: g.id });
+      const track = document.getElementById('genreCarouselTrack');
+      if (!track) return;
+
+      const cacheKey = `mr_genre_${contentType}_${g.id}`;
+      const cached = sessionGet(cacheKey);
+      if (cached) {
+        track.innerHTML = '';
+        cached.forEach(m => track.appendChild(buildCard(m, { type: contentType === 'anime' ? 'anime' : contentType })));
+        requestAnimationFrame(() => createCarousel(track)?.updateBtns());
+        return;
+      }
+
+      const gen = ++_genreGen;
+      _startGenreLoad(track);
+
+      try {
+        let data;
+        if (contentType === 'anime') {
+          data = await API.discoverTV({ with_genres: g.id, with_original_language: 'ja', sort_by: 'popularity.desc' });
+        } else if (contentType === 'tv') {
+          data = await API.getByGenreTV(g.id);
+        } else {
+          data = await API.getByGenreMovies(g.id);
+        }
+
+        if (gen !== _genreGen) return;
+
+        const items = (data.results || []).filter(m => m.poster_path);
+        track.innerHTML = '';
+
+        if (!items.length) {
+          track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Nenhum título encontrado.</p>';
+          return;
+        }
+
+        sessionSet(cacheKey, items);
+        items.forEach(m => track.appendChild(buildCard(m, { type: contentType === 'anime' ? 'anime' : contentType })));
+        requestAnimationFrame(() => createCarousel(track)?.updateBtns());
+      } catch (err) {
+        if (gen !== _genreGen || err.name === 'AbortError') return;
+        track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Erro ao carregar. Tente novamente.</p>';
+      } finally {
+        _endGenreLoad();
       }
     });
     strip.appendChild(pill);
@@ -274,14 +336,12 @@ function _buildGenreStrip(contentType) {
 }
 
 function initGenreStrip() {
-  const typeGroup = document.getElementById('genreTypeGroup');
-
-  typeGroup?.querySelectorAll('.segmented-control-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      typeGroup.querySelectorAll('.segmented-control-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      _buildGenreStrip(btn.dataset.type);
-    });
+  document.getElementById('genreTypeGroup')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-type]');
+    if (!btn) return;
+    document.querySelectorAll('#genreTypeGroup .segmented-control-btn')
+      .forEach(b => b.classList.toggle('active', b === btn));
+    _buildGenreStrip(btn.dataset.type);
   });
 
   _buildGenreStrip('movie');
@@ -365,7 +425,7 @@ function initDice3d() {
 
     shakeX *= 0.92; shakeY *= 0.92;
     dice.style.transform = `translate(${shakeX}px,${shakeY}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
-    requestAnimationFrame(tick);
+    _diceRafId = requestAnimationFrame(tick);
   }
 
   function impulse(dx, dy, dt) {
@@ -433,6 +493,152 @@ function initDice3d() {
   tick();
 }
 
+let _hiddenGemsGen = 0;
+let _hiddenGemsController = null;
+
+function _startHiddenGemsLoad(track) {
+  _hiddenGemsController?.abort();
+  _hiddenGemsController = new AbortController();
+  API.setAbortSignal(_hiddenGemsController.signal);
+  track.innerHTML = '';
+  track.appendChild(buildSkeletonCards(10));
+}
+
+function _endHiddenGemsLoad() {
+  API.clearAbortSignal();
+}
+
+function _renderHiddenGems(track, items, type) {
+  track.innerHTML = '';
+  items.forEach(m => track.appendChild(buildCard(m, { type })));
+  requestAnimationFrame(() => createCarousel(track)?.updateBtns());
+}
+
+async function _loadHiddenGems(type) {
+  const track = document.getElementById('hiddenGemsTrack');
+  if (!track) return;
+
+  const cacheKey = `mr_hgems_${type}`;
+  const cached = sessionGet(cacheKey);
+  if (cached) {
+    _renderHiddenGems(track, cached, type);
+    return;
+  }
+
+  const fetchFns = { movie: API.getHiddenGemsMovies, tv: API.getHiddenGemsMoviesTV, anime: API.getHiddenGemsMoviesAnime };
+  const fetchFn = fetchFns[type] ?? API.getHiddenGemsMovies;
+
+  const gen = ++_hiddenGemsGen;
+  _startHiddenGemsLoad(track);
+
+  try {
+    const first = await fetchFn(1);
+    if (gen !== _hiddenGemsGen) return;
+
+    const total = first.total_results || 0;
+    const lastPageCount = total % 20 || 20;
+    const fullPages = lastPageCount >= 10 ? (first.total_pages || 1) : Math.max(1, (first.total_pages || 1) - 1);
+    const safeMax = Math.min(fullPages, 3);
+    const page = Math.floor(Math.random() * safeMax) + 1;
+
+    const data = page === 1 ? first : await fetchFn(page);
+    if (gen !== _hiddenGemsGen) return;
+
+    const items = (data.results || []).filter(m => m.poster_path);
+
+    if (!items.length) {
+      track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Nenhum título encontrado.</p>';
+      return;
+    }
+
+    sessionSet(cacheKey, items);
+    _renderHiddenGems(track, items, type);
+  } catch (err) {
+    if (gen !== _hiddenGemsGen || err.name === 'AbortError') return;
+    track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Erro ao carregar. Tente novamente.</p>';
+  } finally {
+    _endHiddenGemsLoad();
+  }
+}
+
+let _topRatedGen = 0;
+let _topRatedController = null;
+
+function _startTopRatedLoad(track) {
+  _topRatedController?.abort();
+  _topRatedController = new AbortController();
+  API.setAbortSignal(_topRatedController.signal);
+  track.innerHTML = '';
+  track.appendChild(buildSkeletonCards(10));
+}
+
+function _endTopRatedLoad() {
+  API.clearAbortSignal();
+}
+
+async function _loadTopRated(type) {
+  const track = document.getElementById('topRatedTrack');
+  if (!track) return;
+
+  const cacheKey = `mr_toprated_${type}`;
+  const cached = sessionGet(cacheKey);
+  if (cached) {
+    track.innerHTML = '';
+    cached.forEach(m => track.appendChild(buildCard(m, { type })));
+    requestAnimationFrame(() => createCarousel(track)?.updateBtns());
+    return;
+  }
+
+  const fetchFns = { movie: API.getTopRatedMovies, tv: API.getTopRatedMoviesTV, anime: API.getTopRatedMoviesAnime };
+  const fetchFn = fetchFns[type] ?? API.getTopRatedMovies;
+  const gen = ++_topRatedGen;
+  _startTopRatedLoad(track);
+
+  try {
+    const data = await fetchFn();
+    if (gen !== _topRatedGen) return;
+
+    const items = (data.results || []).filter(m => m.poster_path);
+
+    if (!items.length) {
+      track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Nenhum título encontrado.</p>';
+      return;
+    }
+
+    sessionSet(cacheKey, items);
+    track.innerHTML = '';
+    items.forEach(m => track.appendChild(buildCard(m, { type })));
+    requestAnimationFrame(() => createCarousel(track)?.updateBtns());
+  } catch (err) {
+    if (gen !== _topRatedGen || err.name === 'AbortError') return;
+    track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Erro ao carregar. Tente novamente.</p>';
+  } finally {
+    _endTopRatedLoad();
+  }
+}
+
+function initTopRated() {
+  document.getElementById('topRatedTypeGroup')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-type]');
+    if (!btn) return;
+    document.querySelectorAll('#topRatedTypeGroup .segmented-control-btn')
+      .forEach(b => b.classList.toggle('active', b === btn));
+    _loadTopRated(btn.dataset.type);
+  });
+  _loadTopRated('movie');
+}
+
+function initHiddenGems() {
+  document.getElementById('hiddenGemsTypeGroup')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-type]');
+    if (!btn) return;
+    document.querySelectorAll('#hiddenGemsTypeGroup .segmented-control-btn')
+      .forEach(b => b.classList.toggle('active', b === btn));
+    _loadHiddenGems(btn.dataset.type);
+  });
+  _loadHiddenGems('movie');
+}
+
 async function initHomePage() {
   initSearch();
   initRandDice();
@@ -441,18 +647,22 @@ async function initHomePage() {
 
   document.getElementById('randomizerBtnMobile')?.addEventListener('click', () => Randomizer.quick());
   initHero();
-  loadCarousel('trendingTrack', () => API.getTrending('week'), { type: 'movie' });
-  loadCarousel('nowPlayingTrack', () => API.getNowPlaying(), { type: 'movie' });
-  loadCarousel('trendingTVTrack', () => API.getTrendingTV('week'), { type: 'tv' });
-  loadCarousel('trendingAnimeTrack', () => API.getTrendingAnime(), { type: 'anime' });
-  loadCarousel('topRatedTrack', () => API.getTopRated(), { type: 'movie' });
-  loadCarousel('hiddenGemsTrack', () => API.getHiddenGems(), { type: 'movie' });
-
-  initVibeSelector();
-  initGenreStrip();
   initDailyPick();
+  loadCarousel('nowPlayingTrack', () => API.getNowPlaying(), { type: 'movie' });
   initAiringTV();
   initAiringAnime();
+  initVibeSelector();
+  initTopRated();
+  initHiddenGems();
+  initGenreStrip();
+  loadCarousel('trendingTrack', () => API.getTrendingMovies('week'), { type: 'movie' });
+  loadCarousel('trendingTVTrack', () => API.getTrendingTV('week'), { type: 'tv' });
+  loadCarousel('trendingAnimeTrack', () => API.getTrendingAnime(), { type: 'anime' });
+
+  window.addEventListener('pagehide', () => {
+    clearInterval(heroTimer);
+    cancelAnimationFrame(_diceRafId);
+  });
 }
 
 async function _initAiringSection(trackId, fetchFn, emptyMsg) {

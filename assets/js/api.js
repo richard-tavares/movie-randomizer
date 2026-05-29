@@ -30,11 +30,27 @@
     _cache.set(key, { data, ts: Date.now() });
     return data;
   }
-  function getTrending(window = 'week') { return request(`/trending/movie/${window}`); }
+  function getTrendingMovies(window = 'week') { return request(`/trending/movie/${window}`); }
   function getTrendingAll(window = 'week') { return request(`/trending/all/${window}`); }
   function getNowPlaying(page = 1) { return request('/movie/now_playing', { page }); }
-  function getTopRated(page = 1) { return request('/movie/top_rated', { page }); }
-  function getPopular(page = 1) { return request('/movie/popular', { page }); }
+  function getTopRatedMovies(page = 1) { return request('/movie/top_rated', { page }); }
+  function getTopRatedTV(page = 1) {
+    return discoverTV({
+      sort_by: 'vote_average.desc',
+      'vote_count.gte': 3000,
+      without_genres: '16',
+      page,
+    });
+  }
+  function getTopRatedAnime(page = 1) {
+    return discoverTV({
+      sort_by: 'vote_average.desc',
+      'vote_count.gte': 1000,
+      with_genres: '16',
+      with_original_language: 'ja',
+      page,
+    });
+  }
   function getUpcoming(page = 1) { return request('/movie/upcoming', { page }); }
 
   function discover(params = {}) {
@@ -45,17 +61,55 @@
     });
   }
 
-  function getHiddenGems(page = 1) {
+  function _oneYearAgo() {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 1);
+    return d.toISOString().substring(0, 10);
+  }
+
+  function getHiddenGemsMovies(page = 1) {
     return discover({
       sort_by: 'vote_average.desc',
-      'vote_count.gte': 80,
-      'vote_count.lte': 2500,
-      'vote_average.gte': 7.5,
+      'vote_count.gte': 2000,
+      'vote_count.lte': 5000,
+      'vote_average.gte': 8,
+      'popularity.lte': 5,
+      'primary_release_date.lte': _oneYearAgo(),
+      without_genres: '99,10402,10770,16,36,10752',
       page,
     });
   }
 
-  function getByGenre(genreId, page = 1) {
+  function getHiddenGemsTV(page = 1) {
+    return discoverTV({
+      sort_by: 'vote_average.desc',
+      'vote_count.gte': 500,
+      'vote_count.lte': 1000,
+      'vote_average.gte': 8,
+      'popularity.lte': 5,
+      'first_air_date.lte': _oneYearAgo(),
+      without_genres: '16,99,10764,10767,36,10768',
+      page,
+    });
+  }
+
+  function getHiddenGemsAnime(page = 1) {
+    return discoverTV({
+      sort_by: 'vote_average.desc',
+      'vote_count.gte': 50,
+      'vote_count.lte': 100,
+      'vote_average.gte': 8,
+      'popularity.lte': 5,
+      'first_air_date.lte': _oneYearAgo(),
+      with_origin_country: 'JP',
+      with_genres: '16',
+      with_original_language: 'ja',
+      without_genres: '99,10764,10767',
+      page,
+    });
+  }
+
+  function getByGenreMovies(genreId, page = 1) {
     return discover({ with_genres: genreId, sort_by: 'popularity.desc', page });
   }
 
@@ -71,7 +125,6 @@
     return isTV ? discoverTV(params) : discover(params);
   }
   function getTrendingTV(window = 'week') { return request(`/trending/tv/${window}`).then(stripAnime); }
-  function getPopularTV(page = 1) { return request('/tv/popular', { page }).then(stripAnime); }
   function getAiringTV(page = 1) { return request('/tv/on_the_air', { page }).then(stripAnime); }
   function getAiringAnime(page = 1) {
     const today = new Date().toISOString().split('T')[0];
@@ -247,9 +300,9 @@
   }
 
   return {
-    getTrending, getTrendingAll, getNowPlaying, getTopRated, getPopular, getUpcoming,
-    discover, getHiddenGems, getByGenre, getByMood,
-    getTrendingTV, getPopularTV, getAiringTV, getAiringAnime, discoverTV, getByGenreTV,
+    getTrendingMovies, getTrendingAll, getNowPlaying, getTopRatedMovies, getTopRatedTV, getTopRatedAnime, getUpcoming,
+    discover, getHiddenGemsMovies, getHiddenGemsTV, getHiddenGemsAnime, getByGenreMovies, getByMood,
+    getTrendingTV, getAiringTV, getAiringAnime, discoverTV, getByGenreTV,
     getTrendingAnime,
     getMovie, getCredits, getVideos, getSimilar, getImages, getReleaseDates,
     getTVShow, getTVCredits, getTVVideos, getSimilarTV,

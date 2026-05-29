@@ -579,6 +579,22 @@ function updateDualRange(wrapId, minEl, maxEl) {
   fill.style.width = (right - left) + '%';
 }
 
+const SESSION_CACHE_TTL = 30 * 60 * 1000;
+
+function sessionGet(key) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw);
+    if (Date.now() - ts > SESSION_CACHE_TTL) { sessionStorage.removeItem(key); return null; }
+    return data;
+  } catch { return null; }
+}
+
+function sessionSet(key, data) {
+  try { sessionStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch { }
+}
+
 function updateSingleRange(wrapId, inputEl) {
   const wrap = document.getElementById(wrapId);
   if (!wrap) return;
