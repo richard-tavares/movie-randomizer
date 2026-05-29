@@ -3,12 +3,18 @@
   const wrap = trackEl.closest('.carousel-wrap');
   if (!wrap) return;
 
+  trackEl._carouselAC?.abort();
+  const ac = new AbortController();
+  const { signal } = ac;
+  trackEl._carouselAC = ac;
+
   const prevBtn = wrap.querySelector('.carousel-btn-prev');
   const nextBtn = wrap.querySelector('.carousel-btn-next');
 
   let _cachedScrollAmount = scrollAmount;
   const _ro = new ResizeObserver(() => { _cachedScrollAmount = null; });
   _ro.observe(trackEl);
+  signal.addEventListener('abort', () => _ro.disconnect());
 
   function getScrollAmount() {
     if (_cachedScrollAmount) return _cachedScrollAmount;
@@ -31,17 +37,17 @@
     trackEl.scrollBy({ left: dir * getScrollAmount(), behavior: 'smooth' });
   }
 
-  prevBtn?.addEventListener('click', () => scrollBy(-1));
-  nextBtn?.addEventListener('click', () => scrollBy(1));
-  trackEl.addEventListener('scroll', throttle(updateBtns, 80), { passive: true });
+  prevBtn?.addEventListener('click', () => scrollBy(-1), { signal });
+  nextBtn?.addEventListener('click', () => scrollBy(1), { signal });
+  trackEl.addEventListener('scroll', throttle(updateBtns, 80), { passive: true, signal });
 
   updateBtns();
   let touchStartX = 0;
-  trackEl.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  trackEl.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true, signal });
   trackEl.addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - touchStartX;
     if (Math.abs(dx) > 40) scrollBy(dx < 0 ? 1 : -1);
-  }, { passive: true });
+  }, { passive: true, signal });
 
   return { updateBtns, scrollBy };
 }

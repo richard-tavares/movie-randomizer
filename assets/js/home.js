@@ -248,19 +248,6 @@ function initVibeSelector() {
 
 let _genreCurrentType = 'movie';
 let _genreGen = 0;
-let _genreController = null;
-
-function _startGenreLoad(track) {
-  _genreController?.abort();
-  _genreController = new AbortController();
-  API.setAbortSignal(_genreController.signal);
-  track.innerHTML = '';
-  track.appendChild(buildSkeletonCards(10));
-}
-
-function _endGenreLoad() {
-  API.clearAbortSignal();
-}
 
 function _buildGenreStrip(contentType) {
   _genreCurrentType = contentType;
@@ -290,15 +277,14 @@ function _buildGenreStrip(contentType) {
       const cacheKey = `mr_genre_${contentType}_${g.id}`;
       const cached = sessionGet(cacheKey);
       if (cached) {
-        track.innerHTML = '';
-        cached.forEach(m => track.appendChild(buildCard(m, { type: contentType === 'anime' ? 'anime' : contentType })));
-        requestAnimationFrame(() => createCarousel(track)?.updateBtns());
+        _renderCarouselTrack(track, cached, contentType === 'anime' ? 'anime' : contentType);
         return;
       }
 
       const gen = ++_genreGen;
-      _startGenreLoad(track);
+      _showSkeletonTrack(track);
 
+      const cardType = contentType === 'anime' ? 'anime' : contentType;
       try {
         let data;
         if (contentType === 'anime') {
@@ -312,7 +298,6 @@ function _buildGenreStrip(contentType) {
         if (gen !== _genreGen) return;
 
         const items = (data.results || []).filter(m => m.poster_path);
-        track.innerHTML = '';
 
         if (!items.length) {
           track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Nenhum título encontrado.</p>';
@@ -320,13 +305,10 @@ function _buildGenreStrip(contentType) {
         }
 
         sessionSet(cacheKey, items);
-        items.forEach(m => track.appendChild(buildCard(m, { type: contentType === 'anime' ? 'anime' : contentType })));
-        requestAnimationFrame(() => createCarousel(track)?.updateBtns());
+        _renderCarouselTrack(track, items, cardType);
       } catch (err) {
         if (gen !== _genreGen || err.name === 'AbortError') return;
         track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Erro ao carregar. Tente novamente.</p>';
-      } finally {
-        _endGenreLoad();
       }
     });
     strip.appendChild(pill);
@@ -494,21 +476,13 @@ function initDice3d() {
 }
 
 let _hiddenGemsGen = 0;
-let _hiddenGemsController = null;
 
-function _startHiddenGemsLoad(track) {
-  _hiddenGemsController?.abort();
-  _hiddenGemsController = new AbortController();
-  API.setAbortSignal(_hiddenGemsController.signal);
+function _showSkeletonTrack(track) {
   track.innerHTML = '';
   track.appendChild(buildSkeletonCards(10));
 }
 
-function _endHiddenGemsLoad() {
-  API.clearAbortSignal();
-}
-
-function _renderHiddenGems(track, items, type) {
+function _renderCarouselTrack(track, items, type) {
   track.innerHTML = '';
   items.forEach(m => track.appendChild(buildCard(m, { type })));
   requestAnimationFrame(() => createCarousel(track)?.updateBtns());
@@ -518,18 +492,19 @@ async function _loadHiddenGems(type) {
   const track = document.getElementById('hiddenGemsTrack');
   if (!track) return;
 
+  const gen = ++_hiddenGemsGen;
+
   const cacheKey = `mr_hgems_${type}`;
   const cached = sessionGet(cacheKey);
   if (cached) {
-    _renderHiddenGems(track, cached, type);
+    _renderCarouselTrack(track, cached, type);
     return;
   }
 
-  const fetchFns = { movie: API.getHiddenGemsMovies, tv: API.getHiddenGemsMoviesTV, anime: API.getHiddenGemsMoviesAnime };
+  const fetchFns = { movie: API.getHiddenGemsMovies, tv: API.getHiddenGemsTV, anime: API.getHiddenGemsAnime };
   const fetchFn = fetchFns[type] ?? API.getHiddenGemsMovies;
 
-  const gen = ++_hiddenGemsGen;
-  _startHiddenGemsLoad(track);
+  _showSkeletonTrack(track);
 
   try {
     const first = await fetchFn(1);
@@ -552,47 +527,32 @@ async function _loadHiddenGems(type) {
     }
 
     sessionSet(cacheKey, items);
-    _renderHiddenGems(track, items, type);
+    _renderCarouselTrack(track, items, type);
   } catch (err) {
     if (gen !== _hiddenGemsGen || err.name === 'AbortError') return;
     track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Erro ao carregar. Tente novamente.</p>';
-  } finally {
-    _endHiddenGemsLoad();
   }
 }
 
 let _topRatedGen = 0;
-let _topRatedController = null;
-
-function _startTopRatedLoad(track) {
-  _topRatedController?.abort();
-  _topRatedController = new AbortController();
-  API.setAbortSignal(_topRatedController.signal);
-  track.innerHTML = '';
-  track.appendChild(buildSkeletonCards(10));
-}
-
-function _endTopRatedLoad() {
-  API.clearAbortSignal();
-}
 
 async function _loadTopRated(type) {
   const track = document.getElementById('topRatedTrack');
   if (!track) return;
 
+  const gen = ++_topRatedGen;
+
   const cacheKey = `mr_toprated_${type}`;
   const cached = sessionGet(cacheKey);
   if (cached) {
-    track.innerHTML = '';
-    cached.forEach(m => track.appendChild(buildCard(m, { type })));
-    requestAnimationFrame(() => createCarousel(track)?.updateBtns());
+    _renderCarouselTrack(track, cached, type);
     return;
   }
 
-  const fetchFns = { movie: API.getTopRatedMovies, tv: API.getTopRatedMoviesTV, anime: API.getTopRatedMoviesAnime };
+  const fetchFns = { movie: API.getTopRatedMovies, tv: API.getTopRatedTV, anime: API.getTopRatedAnime };
   const fetchFn = fetchFns[type] ?? API.getTopRatedMovies;
-  const gen = ++_topRatedGen;
-  _startTopRatedLoad(track);
+
+  _showSkeletonTrack(track);
 
   try {
     const data = await fetchFn();
@@ -606,14 +566,10 @@ async function _loadTopRated(type) {
     }
 
     sessionSet(cacheKey, items);
-    track.innerHTML = '';
-    items.forEach(m => track.appendChild(buildCard(m, { type })));
-    requestAnimationFrame(() => createCarousel(track)?.updateBtns());
+    _renderCarouselTrack(track, items, type);
   } catch (err) {
     if (gen !== _topRatedGen || err.name === 'AbortError') return;
     track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Erro ao carregar. Tente novamente.</p>';
-  } finally {
-    _endTopRatedLoad();
   }
 }
 
@@ -651,13 +607,13 @@ async function initHomePage() {
   loadCarousel('nowPlayingTrack', () => API.getNowPlaying(), { type: 'movie' });
   initAiringTV();
   initAiringAnime();
+  loadCarousel('trendingTrack', () => API.getTrendingMovies('week'), { type: 'movie' });
+  loadCarousel('trendingTVTrack', () => API.getTrendingTV('week'), { type: 'tv' });
+  loadCarousel('trendingAnimeTrack', () => API.getTrendingAnime(), { type: 'anime' });
   initVibeSelector();
   initTopRated();
   initHiddenGems();
   initGenreStrip();
-  loadCarousel('trendingTrack', () => API.getTrendingMovies('week'), { type: 'movie' });
-  loadCarousel('trendingTVTrack', () => API.getTrendingTV('week'), { type: 'tv' });
-  loadCarousel('trendingAnimeTrack', () => API.getTrendingAnime(), { type: 'anime' });
 
   window.addEventListener('pagehide', () => {
     clearInterval(heroTimer);
