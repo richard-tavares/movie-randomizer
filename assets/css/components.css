@@ -394,6 +394,16 @@
   margin-top: var(--sp-1);
 }
 
+.content-card-character {
+  font-size: var(--text-xs);
+  color: var(--clr-text-3);
+  margin-top: var(--sp-1);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;

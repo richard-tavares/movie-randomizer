@@ -76,7 +76,7 @@ function _renderWorks(credits) {
   const _selfTerms = ['Himself', 'Herself', 'Self', 'Narrator', 'Host'];
   const _isSelfAppearance = m => m.character && _selfTerms.some(t => m.character.startsWith(t));
 
-  const all = [...(credits?.cast || []), ...(credits?.crew || [])];
+  const all = [...(credits?.crew || []), ...(credits?.cast || [])];
   const deduped = [...new Map(
     all.filter(m => m.poster_path && (m.vote_count || 0) >= 20 && !_isSelfAppearance(m))
       .map(m => [m.id, m])
@@ -90,7 +90,15 @@ function _renderWorks(credits) {
 
   sorted.forEach(item => {
     item._type = item.media_type === 'tv' ? 'tv' : 'movie';
-    grid.appendChild(buildCard(item, { type: item._type }));
+    const card = buildCard(item, { type: item._type });
+    const role = item.character || item.job;
+    if (role) {
+      const el = document.createElement('div');
+      el.className = 'content-card-character';
+      el.textContent = role;
+      card.querySelector('.content-card-info')?.appendChild(el);
+    }
+    grid.appendChild(card);
   });
 }
 
