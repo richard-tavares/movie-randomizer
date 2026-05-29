@@ -33,11 +33,17 @@
   function getTrendingMovies(window = 'week') { return request(`/trending/movie/${window}`); }
   function getTrendingAll(window = 'week') { return request(`/trending/all/${window}`); }
   function getNowPlaying(page = 1) { return request('/movie/now_playing', { page }); }
-  function getTopRatedMovies(page = 1) { return request('/movie/top_rated', { page }); }
+  function getTopRatedMovies(page = 1) {
+    return discover({
+      sort_by: 'vote_average.desc',
+      'vote_count.gte': 20000,
+      page,
+    });
+  }
   function getTopRatedTV(page = 1) {
     return discoverTV({
       sort_by: 'vote_average.desc',
-      'vote_count.gte': 3000,
+      'vote_count.gte': 10000,
       without_genres: '16',
       page,
     });
@@ -45,7 +51,7 @@
   function getTopRatedAnime(page = 1) {
     return discoverTV({
       sort_by: 'vote_average.desc',
-      'vote_count.gte': 1000,
+      'vote_count.gte': 2000,
       with_genres: '16',
       with_original_language: 'ja',
       page,
