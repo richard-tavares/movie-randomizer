@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://richard-tavares.github.io/movie-randomizer/sitemap.xml
