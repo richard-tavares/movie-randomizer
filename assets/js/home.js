@@ -58,7 +58,11 @@ function renderHero(movie, instant = false) {
   const btns = document.getElementById('heroActions');
   if (!backdrop) return;
 
-  const url = backdropUrl(movie.backdrop_path, 'LG') || backdropUrl(movie.backdrop_path, 'SM');
+  const isMobile = window.innerWidth <= 480;
+  const url = isMobile
+    ? (posterUrl(movie.poster_path, 'LG') || backdropUrl(movie.backdrop_path, 'LG'))
+    : (backdropUrl(movie.backdrop_path, 'LG') || backdropUrl(movie.backdrop_path, 'SM'));
+  backdrop.style.backgroundPosition = isMobile ? 'center top' : '';
 
   function restartZoom() {
     backdrop.style.animation = 'none';

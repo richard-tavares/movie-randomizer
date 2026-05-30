@@ -311,7 +311,7 @@
 
 @media (max-width: 768px) {
   .hero-content {
-    padding: var(--sp-12) var(--section-x) var(--sp-10);
+    padding: var(--sp-12) var(--section-x) var(--sp-6);
   }
 
   .hero-title {
@@ -342,8 +342,8 @@
 
 @media (max-width: 480px) {
   .hero {
-    height: 75svh;
-    min-height: 420px;
+    height: 88svh;
+    min-height: 520px;
   }
 
   .hero-synopsis {
