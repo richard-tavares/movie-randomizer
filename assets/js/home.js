@@ -43,6 +43,7 @@ async function initHero() {
       renderHero(heroMovies[heroIndex], true);
       buildHeroDots();
       heroTimer = setInterval(advanceHero, 7000);
+      _initHeroSwipe();
     }
   } catch (err) {
     console.warn('Hero failed:', err);
@@ -130,9 +131,33 @@ function advanceHero() {
   renderHero(heroMovies[heroIndex]);
 }
 
+function _prevHero() {
+  if (!heroMovies.length) return;
+  heroIndex = (heroIndex - 1 + heroMovies.length) % heroMovies.length;
+  _saveHomeState({ heroIndex });
+  renderHero(heroMovies[heroIndex]);
+}
+
 function resetHeroTimer() {
   clearInterval(heroTimer);
   heroTimer = setInterval(advanceHero, 7000);
+}
+
+function _initHeroSwipe() {
+  const section = document.querySelector('.hero');
+  if (!section) return;
+  let startX = 0, startY = 0;
+  section.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  section.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+    if (dx < 0) advanceHero(); else _prevHero();
+    resetHeroTimer();
+  }, { passive: true });
 }
 
 function initSearch() {
