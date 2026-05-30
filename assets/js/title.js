@@ -293,6 +293,9 @@ function _initWatchlistBtns(item, contentType) {
     updateBtns();
   }
 
+  if (wantBtnMob) { wantBtnMob.dataset.wlId = item.id; wantBtnMob.dataset.wlList = 'want'; }
+  if (favBtnMob) { favBtnMob.dataset.wlId = item.id; favBtnMob.dataset.wlList = 'favorite'; }
+
   wantBtnMob?.addEventListener('click', () => toggle('want'));
   favBtnMob?.addEventListener('click', () => toggle('favorite'));
 

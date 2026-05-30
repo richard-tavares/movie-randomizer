@@ -279,6 +279,8 @@ function buildActionButtons(movie, contentType) {
 
   const wlBtn = document.createElement('button');
   wlBtn.className = 'btn-icon btn-icon-lg';
+  wlBtn.dataset.wlId = movie.id;
+  wlBtn.dataset.wlList = 'want';
   const wlLabel = entry?.want ? 'Remover Salvo' : 'Salvar';
   wlBtn.title = wlLabel;
   wlBtn.setAttribute('aria-label', wlLabel);
@@ -287,6 +289,8 @@ function buildActionButtons(movie, contentType) {
 
   const favBtn = document.createElement('button');
   favBtn.className = 'btn-icon btn-icon-lg btn-fav';
+  favBtn.dataset.wlId = movie.id;
+  favBtn.dataset.wlList = 'favorite';
   const favLabel = entry?.favorite ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos';
   favBtn.title = favLabel;
   favBtn.setAttribute('aria-label', favLabel);
@@ -626,9 +630,48 @@ function updateSingleRange(wrapId, inputEl) {
 
 window.addEventListener('pageshow', e => {
   if (!e.persisted) return;
+
   document.querySelectorAll('.dual-range-wrap').forEach(wrap => {
     const inputs = wrap.querySelectorAll('input[type=range]');
     if (inputs.length === 2) updateDualRange(wrap.id, inputs[0], inputs[1]);
     else if (inputs.length === 1) updateSingleRange(wrap.id, inputs[0]);
+  });
+
+  const all = Watchlist.getAll();
+  document.querySelectorAll('.content-card[data-id]').forEach(card => {
+    const entry = all[card.dataset.id];
+    const addBtn = card.querySelector('.content-card-add');
+    const favBtn = card.querySelector('.content-card-fav');
+    if (addBtn) {
+      addBtn.classList.toggle('added', !!entry?.want);
+      addBtn.innerHTML = entry?.want ? '<i class="ph ph-check"></i>' : '<i class="ph ph-plus"></i>';
+      const addedLabel = entry?.want ? 'Remover Salvo' : 'Salvar';
+      addBtn.title = addedLabel;
+      addBtn.setAttribute('aria-label', addedLabel);
+    }
+    if (favBtn) {
+      favBtn.classList.toggle('faved', !!entry?.favorite);
+      favBtn.innerHTML = entry?.favorite ? '<i class="ph-fill ph-heart"></i>' : '<i class="ph ph-heart"></i>';
+      const favLabel = entry?.favorite ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos';
+      favBtn.title = favLabel;
+      favBtn.setAttribute('aria-label', favLabel);
+    }
+  });
+
+  document.querySelectorAll('[data-wl-id]').forEach(btn => {
+    const entry = all[btn.dataset.wlId];
+    const isFav = btn.dataset.wlList === 'favorite';
+    const isActive = isFav ? !!entry?.favorite : !!entry?.want;
+    let icon, label;
+    if (isFav) {
+      icon = isActive ? '<i class="ph-fill ph-heart"></i>' : '<i class="ph ph-heart"></i>';
+      label = isActive ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos';
+    } else {
+      icon = isActive ? '<i class="ph ph-check"></i>' : '<i class="ph ph-plus"></i>';
+      label = isActive ? 'Remover Salvo' : 'Salvar';
+    }
+    btn.innerHTML = icon;
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
   });
 });

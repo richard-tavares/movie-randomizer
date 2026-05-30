@@ -42,13 +42,6 @@
   trackEl.addEventListener('scroll', throttle(updateBtns, 80), { passive: true, signal });
 
   updateBtns();
-  let touchStartX = 0;
-  trackEl.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true, signal });
-  trackEl.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 40) scrollBy(dx < 0 ? 1 : -1);
-  }, { passive: true, signal });
-
   return { updateBtns, scrollBy };
 }
 async function loadCarousel(trackId, fetchFn, opts = {}) {

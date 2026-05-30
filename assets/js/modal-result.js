@@ -97,6 +97,8 @@ const RandResult = (() => {
     trailerBtn.onclick = () => Trailer.open(movie.id, ctype);
 
     const favBtn = overlay.querySelector('.rand-btn-fav');
+    favBtn.dataset.wlId = movie.id;
+    favBtn.dataset.wlList = 'favorite';
     const isFaved = () => !!Watchlist.getAll()[movie.id]?.favorite;
     const updateFavBtn = () => {
       const faved = isFaved();
@@ -120,6 +122,8 @@ const RandResult = (() => {
     detailBtn.onclick = () => goToTitle(movie.id, ctype);
 
     const wlBtn = overlay.querySelector('.rand-btn-wl');
+    wlBtn.dataset.wlId = movie.id;
+    wlBtn.dataset.wlList = 'want';
     const isSaved = () => !!Watchlist.getAll()[movie.id]?.want;
     const updateWlBtn = () => {
       const saved = isSaved();
