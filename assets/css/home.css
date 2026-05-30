@@ -342,7 +342,7 @@
 
 @media (max-width: 480px) {
   .hero {
-    height: 88svh;
+    height: calc(100svh - var(--navbar-height));
     min-height: 520px;
   }
 
