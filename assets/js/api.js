@@ -115,8 +115,8 @@
     });
   }
 
-  function getByGenreMovies(genreId, page = 1) {
-    return discover({ with_genres: genreId, sort_by: 'popularity.desc', page });
+  function getByGenreMovies(genreId, page = 1, without_genres = null) {
+    return discover({ with_genres: genreId, sort_by: 'popularity.desc', 'vote_average.gte': 7.5, 'vote_count.gte': 500, page, ...(without_genres && { without_genres }) });
   }
 
   function getByMood(moodKey, page = 1, contentType = 'movie') {
@@ -146,8 +146,8 @@
     });
   }
 
-  function getByGenreTV(genreId, page = 1) {
-    return discoverTV({ with_genres: genreId, sort_by: 'popularity.desc', page }).then(stripAnime);
+  function getByGenreTV(genreId, page = 1, without_genres = null) {
+    return discoverTV({ with_genres: genreId, sort_by: 'popularity.desc', page, ...(without_genres && { without_genres }) }).then(stripAnime);
   }
   function getTrendingAnime(page = 1) {
     return discoverTV({

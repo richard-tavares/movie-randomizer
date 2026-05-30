@@ -257,7 +257,7 @@ function _buildGenreStrip(contentType) {
   strip.innerHTML = '';
 
   const genreList = FEATURED_GENRES.filter(g => {
-    if (contentType === 'anime') return g.mediaType === 'tv' || g.mediaType === 'both';
+    if (contentType === 'anime') return (g.mediaType === 'tv' || g.mediaType === 'both') && g.id !== 16 && g.id !== 99;
     if (contentType === 'tv') return g.mediaType === 'tv' || g.mediaType === 'both';
     return g.mediaType === 'movie' || g.mediaType === 'both';
   }).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
@@ -288,11 +288,13 @@ function _buildGenreStrip(contentType) {
       try {
         let data;
         if (contentType === 'anime') {
-          data = await API.discoverTV({ with_genres: g.id, with_original_language: 'ja', sort_by: 'popularity.desc' });
+          const baseRules = 'without_genres_anime' in g ? g.without_genres_anime : (g.without_genres_tv || g.without_genres || '');
+          const animeWithout = [...new Set([...baseRules.split(',').filter(id => id && id !== '16'), '99'])].join(',');
+          data = await API.discoverTV({ with_genres: g.id === 16 ? '16' : `16,${g.id}`, with_original_language: 'ja', sort_by: 'popularity.desc', ...(animeWithout && { without_genres: animeWithout }) });
         } else if (contentType === 'tv') {
-          data = await API.getByGenreTV(g.id);
+          data = await API.getByGenreTV(g.id, 1, g.without_genres_tv || g.without_genres);
         } else {
-          data = await API.getByGenreMovies(g.id);
+          data = await API.getByGenreMovies(g.id, 1, g.without_genres);
         }
 
         if (gen !== _genreGen) return;

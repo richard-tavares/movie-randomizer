@@ -1,11 +1,11 @@
 ﻿const STREAMING_PROVIDERS = [
-  { id: 2,    name: 'Apple TV+' },
-  { id: 337,  name: 'Disney+' },
-  { id: 307,  name: 'Globoplay' },
+  { id: 2, name: 'Apple TV+' },
+  { id: 337, name: 'Disney+' },
+  { id: 307, name: 'Globoplay' },
   { id: 1899, name: 'HBO Max' },
-  { id: 8,    name: 'Netflix' },
-  { id: 531,  name: 'Paramount+' },
-  { id: 119,  name: 'Prime Video' },
+  { id: 8, name: 'Netflix' },
+  { id: 531, name: 'Paramount+' },
+  { id: 119, name: 'Prime Video' },
 ];
 
 const COUNTRIES = [
@@ -62,26 +62,103 @@ const TV_GENRES = {
   10762: 'Kids',
   9648: 'Mistério',
   10764: 'Reality',
+  10749: 'Romance',
   10765: 'Ficção Científica & Fantasia',
   10768: 'Guerra & Política',
   37: 'Faroeste',
 };
 const ALL_GENRES = { ...GENRES, ...TV_GENRES };
 const FEATURED_GENRES = [
-  { id: 28, name: 'Ação', mediaType: 'movie' },
-  { id: 35, name: 'Comédia', mediaType: 'both' },
-  { id: 18, name: 'Drama', mediaType: 'both' },
-  { id: 27, name: 'Terror', mediaType: 'movie' },
-  { id: 878, name: 'Ficção Científica', mediaType: 'movie' },
-  { id: 53, name: 'Suspense', mediaType: 'movie' },
-  { id: 10749, name: 'Romance', mediaType: 'both' },
-  { id: 16, name: 'Animação', mediaType: 'movie' },
-  { id: 80, name: 'Crime', mediaType: 'both' },
-  { id: 12, name: 'Aventura', mediaType: 'movie' },
-  { id: 14, name: 'Fantasia', mediaType: 'movie' },
-  { id: 99, name: 'Documentário', mediaType: 'both' },
-  { id: 10759, name: 'Ação & Aventura', mediaType: 'tv' },
-  { id: 10765, name: 'Sci-Fi & Fantasia', mediaType: 'tv' },
+  {
+    id: 28,
+    name: 'Ação',
+    mediaType: 'movie',
+    without_genres: '16,12,14,878,18,99,36,10752,35,10402'
+  },
+  {
+    id: 35,
+    name: 'Comédia',
+    mediaType: 'both',
+    without_genres: '53,28,12,14,878,16,99,36,10752,10402,18,10749',
+    without_genres_tv: '53,10759,10765,16,99,36,10768,10402,18,10749'
+  },
+  {
+    id: 18,
+    name: 'Drama',
+    mediaType: 'both',
+    without_genres: '35,16,12,14,878,99,36,10752,10402,10749,80,27',
+    without_genres_tv: '35,16,10759,10765,99,36,10768,10402,10749,80,27'
+  },
+  {
+    id: 27,
+    name: 'Terror',
+    mediaType: 'movie',
+    without_genres: '35,10749,16,99,36,10752,10402,878'
+  },
+  {
+    id: 878,
+    name: 'Ficção Científica',
+    mediaType: 'movie',
+    without_genres: '16,12,14,99,36,10752,10402,35,10749'
+  },
+  {
+    id: 53,
+    name: 'Suspense',
+    mediaType: 'movie',
+    without_genres: '35,10749,16,12,14,878,27,28,99,36,10752,10402'
+  },
+  {
+    id: 10749,
+    name: 'Romance',
+    mediaType: 'both',
+    without_genres: '27,53,16,99,36,10752,10402',
+    without_genres_tv: '27,53,16,99,36,10768,10402',
+    without_genres_anime: ''
+  },
+  {
+    id: 16,
+    name: 'Animação',
+    mediaType: 'movie',
+    without_genres: '99,36,10752,10402'
+  },
+  {
+    id: 80,
+    name: 'Crime',
+    mediaType: 'both',
+    without_genres: '35,10749,16,12,14,878,99,36,10752,10402',
+    without_genres_tv: '35,10749,16,10759,10765,99,36,10768,10402'
+  },
+  {
+    id: 12,
+    name: 'Aventura',
+    mediaType: 'movie',
+    without_genres: '16,27,878,14,99,36,10752,10402,18'
+  },
+  {
+    id: 14,
+    name: 'Fantasia',
+    mediaType: 'movie',
+    without_genres: '16,27,18,878,99,36,10752,10402'
+  },
+  {
+    id: 99,
+    name: 'Documentário',
+    mediaType: 'both'
+  },
+  {
+    id: 10759,
+    name: 'Ação & Aventura',
+    mediaType: 'tv',
+    without_genres: '16,99,36,10768,10402,10765,80',
+    without_genres_anime: '99,36,10768,10402,10765'
+  },
+  {
+    id: 10765,
+    name: 'Sci-Fi & Fantasia',
+    mediaType: 'tv',
+    without_genres: '16,99,36,10768,10402,10759',
+    without_genres_anime: '99,36,10768,10402,10759'
+  },
 ];
 const STREAMING_SERVICES = [
   { id: 8, name: 'Netflix' },
