@@ -197,6 +197,7 @@
         const newKeys = getNewMonths().slice(0, MONTHS_PER_LOAD);
         if (newKeys.length) {
           appendMonths(newKeys);
+          _persistStore();
         }
         if (satisfied) {
           refreshLoadMoreBtn();
@@ -228,6 +229,7 @@
         </div>`;
     }
     refreshLoadMoreBtn();
+    _persistStore();
   }
 
   function _startLoad(type) {
@@ -278,13 +280,66 @@
     }
   }
 
+  const _STATE_KEY = 'mr_upcoming_state';
+  const _TTL_2H = 2 * 60 * 60 * 1000;
+  function _saveState(partial) {
+    const cur = localGet(_STATE_KEY) || {};
+    localSet(_STATE_KEY, { ...cur, ...partial }, _TTL_2H);
+  }
+  function _getState() {
+    return localGet(_STATE_KEY) || {};
+  }
+  function _persistStore() {
+    _saveState({
+      store: { movie: store.movie, tv: store.tv, anime: store.anime },
+      nextOffset: { movie: nextOffset.movie, tv: nextOffset.tv, anime: nextOffset.anime },
+    });
+  }
+
   document.getElementById('upcomingTypeGroup')?.addEventListener('click', e => {
     const btn = e.target.closest('[data-type]');
     if (!btn || loading) return;
     document.querySelectorAll('#upcomingTypeGroup .segmented-control-btn')
       .forEach(b => b.classList.toggle('active', b === btn));
+    _saveState({ type: btn.dataset.type });
     switchType(btn.dataset.type);
   });
 
-  init();
+  window.addEventListener('pagehide', () => _saveState({ scrollY: window.scrollY }));
+
+  const saved = _getState();
+
+  if (saved.type && saved.type !== activeType) {
+    activeType = saved.type;
+    document.querySelectorAll('#upcomingTypeGroup .segmented-control-btn')
+      .forEach(b => b.classList.toggle('active', b.dataset.type === saved.type));
+  }
+
+  if (saved.store && saved.nextOffset) {
+    Object.assign(store.movie, saved.store.movie || []);
+    Object.assign(store.tv, saved.store.tv || []);
+    Object.assign(store.anime, saved.store.anime || []);
+    store.movie = saved.store.movie || [];
+    store.tv = saved.store.tv || [];
+    store.anime = saved.store.anime || [];
+    nextOffset.movie = saved.nextOffset.movie || 0;
+    nextOffset.tv = saved.nextOffset.tv || 0;
+    nextOffset.anime = saved.nextOffset.anime || 0;
+
+    _startLoad(activeType);
+    renderInitial();
+    _endLoad();
+
+    if (saved.scrollY) {
+      history.scrollRestoration = 'manual';
+      requestAnimationFrame(() => window.scrollTo({ top: saved.scrollY, behavior: 'instant' }));
+    }
+  } else {
+    init().then(() => {
+      if (saved.scrollY) {
+        history.scrollRestoration = 'manual';
+        requestAnimationFrame(() => window.scrollTo({ top: saved.scrollY, behavior: 'instant' }));
+      }
+    });
+  }
 })();

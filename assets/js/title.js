@@ -223,6 +223,31 @@ function _renderWatchProviders(data) {
   `).join('');
 }
 
+async function _findSimilar(item, contentType) {
+  const isTV = contentType === 'tv' || contentType === 'anime';
+  const kwData = await API.getKeywords(item.id, isTV).catch(() => null);
+  const kwList = kwData?.keywords || kwData?.results || [];
+  const keywords = kwList.slice(0, 5).map(k => k.id);
+
+  const primaryGenre = item.genres?.[0]?.id;
+  const genres = primaryGenre ? [primaryGenre] : [];
+  const minRating = Math.max((item.vote_average || 6) - 1.5, 5);
+  const releaseYear = Number.parseInt(formatYear(item.release_date || item.first_air_date) || '2000');
+  const base = { contentType, excludeId: item.id, yearMax: new Date().getFullYear() };
+
+  const attempts = [
+    { ...base, keywords, genres, minRating, yearMin: releaseYear - 15 },
+    { ...base, keywords: keywords.slice(0, 3), minRating, yearMin: releaseYear - 20 },
+    { ...base, genres, minRating: Math.max(minRating - 1, 4), yearMin: releaseYear - 20 },
+    { ...base, genres },
+  ];
+
+  for (const filters of attempts) {
+    try { return await API.randomize(filters); } catch { }
+  }
+  throw new Error('Não foi possível encontrar um título similar.');
+}
+
 function _initWatchlistBtns(item, contentType) {
   const wantBtnMob = document.getElementById('btnWantMobile');
   const favBtnMob = document.getElementById('btnFavoriteMobile');
@@ -277,22 +302,13 @@ function _initWatchlistBtns(item, contentType) {
     similarBtn.disabled = true;
     similarBtn.innerHTML = '<i class="ph ph-spinner"></i> Sorteando...';
     try {
-      const genres = item.genres?.map(g => g.id) || [];
-      const minRating = Math.max((item.vote_average || 6) - 1.5, 5);
-      const yearMin = Number.parseInt(formatYear(item.release_date || item.first_air_date) || '2000') - 15;
-      const result = await API.randomize({
-        contentType,
-        genres,
-        minRating,
-        yearMin,
-        yearMax: new Date().getFullYear(),
-      });
-      RandResult.show(result, { contentType, genres, minRating, yearMin, yearMax: new Date().getFullYear() });
+      const result = await _findSimilar(item, contentType);
+      RandResult.show(result, { contentType });
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
       similarBtn.disabled = false;
-      similarBtn.innerHTML = '<i class="ph ph-dice-five"></i> Sortear Similar';
+      similarBtn.innerHTML = '<i class="ph ph-dice-five"></i><span class="btn-collapse-text"> Sortear Similar</span>';
     }
   });
 
@@ -335,4 +351,22 @@ function _renderSimilar(similar, currentItem, contentType) {
   requestAnimationFrame(() => createCarousel(track));
 }
 
-document.addEventListener('DOMContentLoaded', initTitlePage);
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(globalThis.location.search);
+  const titleId = params.get('id');
+  const scrollKey = `mr_title_scroll_${titleId}`;
+
+  const savedScroll = localGet(scrollKey);
+  if (savedScroll) {
+    history.scrollRestoration = 'manual';
+    initTitlePage().then(() => {
+      requestAnimationFrame(() => window.scrollTo({ top: savedScroll, behavior: 'instant' }));
+    });
+  } else {
+    initTitlePage();
+  }
+
+  window.addEventListener('pagehide', () => {
+    localSet(scrollKey, window.scrollY, 2 * 60 * 60 * 1000);
+  });
+});

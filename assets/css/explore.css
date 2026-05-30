@@ -222,7 +222,9 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--sp-2);
+  min-width: 0;
 }
+
 
 #exploreSidebarClose {
   display: none;

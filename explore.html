@@ -89,19 +89,26 @@
               </div>
               <input class="dual-range-input" type="range" id="exploreRating" min="0" max="9" value="0" step="0.5">
             </div>
+            <div class="range-ticks">
+              <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span>
+            </div>
           </div>
 
           <div class="sidebar-section" id="exploreCertSection">
-            <label class="sidebar-label" for="exploreCert">Classificação Indicativa</label>
-            <select class="sidebar-select" id="exploreCert">
-              <option value="">Todas</option>
-              <option value="L">Livre</option>
-              <option value="10">10+</option>
-              <option value="12">12+</option>
-              <option value="14">14+</option>
-              <option value="16">16+</option>
-              <option value="18">18+</option>
-            </select>
+            <div class="sidebar-section-header">
+              <div class="sidebar-label">Classificação Indicativa</div>
+              <span class="filter-value" id="exploreCertVal">Todas</span>
+            </div>
+            <div class="dual-range-wrap" id="exploreCertRange">
+              <div class="dual-range-track">
+                <div class="dual-range-fill"></div>
+              </div>
+              <input class="dual-range-input" type="range" id="exploreCertMin" min="0" max="5" value="0" step="1">
+              <input class="dual-range-input" type="range" id="exploreCertMax" min="0" max="5" value="5" step="1">
+            </div>
+            <div class="range-ticks">
+              <span>L</span><span>10</span><span>12</span><span>14</span><span>16</span><span>18</span>
+            </div>
           </div>
 
           <div class="sidebar-section">

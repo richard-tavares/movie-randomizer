@@ -1,4 +1,6 @@
 const CustomSelect = (() => {
+  const _initialized = [];
+
   function init(selectEl) {
     if (!selectEl || selectEl._cselInit) return;
     selectEl._cselInit = true;
@@ -134,12 +136,22 @@ const CustomSelect = (() => {
     });
 
     selectEl.addEventListener('change', updateLabel);
+    selectEl._cselRefresh = updateLabel;
     updateLabel();
+    _initialized.push(selectEl);
   }
 
   function initAll(selector = '.sidebar-select, .explore-sort, .filter-select') {
     document.querySelectorAll(selector).forEach(init);
   }
 
-  return { init, initAll };
+  function refresh(selectEl) {
+    selectEl?._cselRefresh?.();
+  }
+
+  window.addEventListener('pageshow', e => {
+    if (e.persisted) _initialized.forEach(el => el._cselRefresh?.());
+  });
+
+  return { init, initAll, refresh };
 })();

@@ -267,14 +267,14 @@ function buildActionButtons(movie, contentType) {
 
   const trailerBtn = document.createElement('button');
   trailerBtn.className = 'btn btn-primary';
-  trailerBtn.innerHTML = '<i class="ph-fill ph-play"></i> Assistir Trailer';
+  trailerBtn.innerHTML = '<i class="ph-fill ph-play"></i> <span class="btn-trailer-text">Assistir Trailer</span><span class="btn-trailer-short">Trailer</span>';
   trailerBtn.addEventListener('click', () => Trailer.open(movie.id, contentType));
 
   const detailBtn = document.createElement('button');
-  detailBtn.className = 'btn btn-secondary';
+  detailBtn.className = 'btn btn-secondary btn-collapse-mobile';
   detailBtn.title = 'Detalhes';
   detailBtn.setAttribute('aria-label', 'Detalhes');
-  detailBtn.innerHTML = '<i class="ph ph-info"></i> Detalhes';
+  detailBtn.innerHTML = '<i class="ph ph-info"></i><span class="btn-collapse-text"> Detalhes</span>';
   detailBtn.addEventListener('click', () => goToTitle(movie.id, contentType));
 
   const wlBtn = document.createElement('button');
@@ -582,6 +582,7 @@ function updateDualRange(wrapId, minEl, maxEl) {
 const SESSION_CACHE_TTL = 30 * 60 * 1000;
 
 function sessionGet(key) {
+  if (!CONFIG.CACHE_ENABLED) return null;
   try {
     const raw = sessionStorage.getItem(key);
     if (!raw) return null;
@@ -592,7 +593,24 @@ function sessionGet(key) {
 }
 
 function sessionSet(key, data) {
+  if (!CONFIG.CACHE_ENABLED) return;
   try { sessionStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch { }
+}
+
+function localGet(key) {
+  if (!CONFIG.CACHE_ENABLED) return null;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { data, ts, ttl } = JSON.parse(raw);
+    if (Date.now() - ts > ttl) { localStorage.removeItem(key); return null; }
+    return data;
+  } catch { return null; }
+}
+
+function localSet(key, data, ttl) {
+  if (!CONFIG.CACHE_ENABLED) return;
+  try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now(), ttl })); } catch { }
 }
 
 function updateSingleRange(wrapId, inputEl) {
@@ -605,3 +623,12 @@ function updateSingleRange(wrapId, inputEl) {
   fill.style.left = '0%';
   fill.style.width = pct + '%';
 }
+
+window.addEventListener('pageshow', e => {
+  if (!e.persisted) return;
+  document.querySelectorAll('.dual-range-wrap').forEach(wrap => {
+    const inputs = wrap.querySelectorAll('input[type=range]');
+    if (inputs.length === 2) updateDualRange(wrap.id, inputs[0], inputs[1]);
+    else if (inputs.length === 1) updateSingleRange(wrap.id, inputs[0]);
+  });
+});

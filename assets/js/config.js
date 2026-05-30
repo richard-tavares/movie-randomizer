@@ -9,15 +9,15 @@
 ];
 
 const COUNTRIES = [
-  { code: 'DE', name: 'Alemanha' },
-  { code: 'BR', name: 'Brasil' },
-  { code: 'KR', name: 'Coreia do Sul' },
-  { code: 'ES', name: 'Espanha' },
   { code: 'US', name: 'EUA' },
-  { code: 'FR', name: 'França' },
-  { code: 'IT', name: 'Itália' },
+  { code: 'BR', name: 'Brasil' },
   { code: 'JP', name: 'Japão' },
+  { code: 'KR', name: 'Coreia do Sul' },
   { code: 'GB', name: 'Reino Unido' },
+  { code: 'FR', name: 'França' },
+  { code: 'ES', name: 'Espanha' },
+  { code: 'DE', name: 'Alemanha' },
+  { code: 'IT', name: 'Itália' },
 ];
 
 const CONFIG = {
@@ -30,26 +30,27 @@ const CONFIG = {
   BACKDROP_LG: 'https://image.tmdb.org/t/p/w1280',
   BACKDROP_OG: 'https://image.tmdb.org/t/p/original',
   LANG: 'pt-BR',
+  CACHE_ENABLED: true,
 };
 const GENRES = {
   28: 'Ação',
-  12: 'Aventura',
   16: 'Animação',
+  12: 'Aventura',
   35: 'Comédia',
   80: 'Crime',
   99: 'Documentário',
   18: 'Drama',
   10751: 'Família',
   14: 'Fantasia',
-  36: 'História',
-  27: 'Terror',
-  10402: 'Música',
-  9648: 'Mistério',
-  10749: 'Romance',
-  878: 'Ficção Científica',
-  53: 'Suspense',
-  10752: 'Guerra',
   37: 'Faroeste',
+  878: 'Ficção Científica',
+  10752: 'Guerra',
+  36: 'História',
+  9648: 'Mistério',
+  10402: 'Música',
+  10749: 'Romance',
+  53: 'Suspense',
+  27: 'Terror',
 };
 const TV_GENRES = {
   10759: 'Ação & Aventura',
@@ -59,13 +60,13 @@ const TV_GENRES = {
   99: 'Documentário',
   18: 'Drama',
   10751: 'Família',
+  37: 'Faroeste',
+  10765: 'Ficção Científica & Fantasia',
+  10768: 'Guerra & Política',
   10762: 'Kids',
   9648: 'Mistério',
   10764: 'Reality',
   10749: 'Romance',
-  10765: 'Ficção Científica & Fantasia',
-  10768: 'Guerra & Política',
-  37: 'Faroeste',
 };
 const ALL_GENRES = { ...GENRES, ...TV_GENRES };
 const FEATURED_GENRES = [
@@ -172,13 +173,16 @@ const STREAMING_SERVICES = [
   { id: 167, name: 'Mubi' },
 ];
 
+const CERT_VALUES = ['L', '10', '12', '14', '16', '18'];
+const CERT_LABELS = ['Livre', '10+', '12+', '14+', '16+', '18+'];
+
 const CONTENT_TYPE_META = {
   movie: {
-    icon: 'ph ph-film-slate',
+    icon: 'ph-fill ph-film-slate',
     label: 'Filme'
   },
   tv: {
-    icon: 'ph ph-television',
+    icon: 'ph-fill ph-television',
     label: 'Série'
   },
   anime: {

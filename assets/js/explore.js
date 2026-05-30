@@ -1,3 +1,9 @@
+function _certLabel(minIdx, maxIdx) {
+  if (minIdx === 0 && maxIdx === 5) return 'Todas';
+  if (minIdx === maxIdx) return CERT_LABELS[minIdx];
+  return `${CERT_LABELS[minIdx]} a ${CERT_LABELS[maxIdx]}`;
+}
+
 const exploreState = {
   contentType: 'movie',
   genres: [],
@@ -6,7 +12,8 @@ const exploreState = {
   minRating: 0,
   streaming: [],
   country: '',
-  certification: '',
+  certMinIdx: 0,
+  certMaxIdx: 5,
   sortBy: 'popularity.desc',
   query: '',
   page: 1,
@@ -22,6 +29,13 @@ function initExplorePage() {
   _bindControls();
   _syncUI();
   _fetch();
+
+  globalThis.addEventListener('popstate', () => {
+    _readUrlParams();
+    _buildGenreOptions();
+    _syncUI();
+    _fetch();
+  });
 }
 
 function _readUrlParams() {
@@ -29,6 +43,38 @@ function _readUrlParams() {
   if (p.get('type')) exploreState.contentType = p.get('type');
   if (p.get('q')) exploreState.query = p.get('q');
   if (p.get('page')) exploreState.page = Math.max(1, Number.parseInt(p.get('page')) || 1);
+  if (p.get('sort')) exploreState.sortBy = p.get('sort');
+  if (p.get('rating')) exploreState.minRating = Number(p.get('rating'));
+  if (p.get('yearMin')) exploreState.yearMin = Number(p.get('yearMin'));
+  if (p.get('yearMax')) exploreState.yearMax = Number(p.get('yearMax'));
+  if (p.get('country')) exploreState.country = p.get('country');
+  if (p.get('cert')) {
+    const [min, max] = p.get('cert').split('-');
+    const minIdx = CERT_VALUES.indexOf(min);
+    const maxIdx = CERT_VALUES.indexOf(max);
+    if (minIdx >= 0) exploreState.certMinIdx = minIdx;
+    if (maxIdx >= 0) exploreState.certMaxIdx = maxIdx;
+  }
+  if (p.get('genres')) exploreState.genres = p.get('genres').split(',').map(Number).filter(Boolean);
+  if (p.get('streaming')) exploreState.streaming = p.get('streaming').split(',').map(Number).filter(Boolean);
+}
+
+function _updateUrl() {
+  const p = new URLSearchParams();
+  p.set('type', exploreState.contentType);
+  if (exploreState.query) p.set('q', exploreState.query);
+  if (exploreState.page > 1) p.set('page', exploreState.page);
+  if (exploreState.sortBy !== 'popularity.desc') p.set('sort', exploreState.sortBy);
+  if (exploreState.minRating > 0) p.set('rating', exploreState.minRating);
+  if (exploreState.yearMin > 1950) p.set('yearMin', exploreState.yearMin);
+  if (exploreState.yearMax < new Date().getFullYear()) p.set('yearMax', exploreState.yearMax);
+  if (exploreState.country) p.set('country', exploreState.country);
+  if (exploreState.certMinIdx > 0 || exploreState.certMaxIdx < 5) {
+    p.set('cert', `${CERT_VALUES[exploreState.certMinIdx]}-${CERT_VALUES[exploreState.certMaxIdx]}`);
+  }
+  if (exploreState.genres.length) p.set('genres', exploreState.genres.join(','));
+  if (exploreState.streaming.length) p.set('streaming', exploreState.streaming.join(','));
+  history.replaceState(null, '', `?${p.toString()}`);
 }
 
 function _buildGenreOptions() {
@@ -75,9 +121,32 @@ function _syncUI() {
   if (countryEl) countryEl.value = exploreState.country;
 
   const certSection = document.getElementById('exploreCertSection');
-  if (certSection) certSection.style.display = exploreState.contentType === 'movie' ? '' : 'none';
+  if (certSection) certSection.style.display = '';
+
+  const certMinEl = document.getElementById('exploreCertMin');
+  const certMaxEl = document.getElementById('exploreCertMax');
+  if (certMinEl && certMaxEl) {
+    certMinEl.value = exploreState.certMinIdx;
+    certMaxEl.value = exploreState.certMaxIdx;
+    updateDualRange('exploreCertRange', certMinEl, certMaxEl);
+    const certValEl = document.getElementById('exploreCertVal');
+    if (certValEl) certValEl.textContent = _certLabel(exploreState.certMinIdx, exploreState.certMaxIdx);
+  }
+
+  _syncMultiSelect('exploreGenres', exploreState.genres);
+  _syncMultiSelect('exploreStreaming', exploreState.streaming);
+
+  CustomSelect.refresh(sortEl);
+  CustomSelect.refresh(countryEl);
 
   _syncPageHeader(sortEl);
+}
+
+function _syncMultiSelect(id, values) {
+  const el = document.getElementById(id);
+  if (!el || !values.length) return;
+  Array.from(el.options).forEach(o => { o.selected = values.includes(Number(o.value)); });
+  CustomSelect.refresh(el);
 }
 
 function _syncPageHeader(sortEl) {
@@ -151,8 +220,28 @@ function _bindControls() {
     _go(1);
   });
 
-  document.getElementById('exploreCert')?.addEventListener('change', (e) => {
-    exploreState.certification = e.target.value;
+  const certMinEl = document.getElementById('exploreCertMin');
+  const certMaxEl = document.getElementById('exploreCertMax');
+  certMinEl?.addEventListener('input', () => {
+    if (+certMinEl.value > +certMaxEl.value) certMaxEl.value = certMinEl.value;
+    updateDualRange('exploreCertRange', certMinEl, certMaxEl);
+    const certValEl = document.getElementById('exploreCertVal');
+    if (certValEl) certValEl.textContent = _certLabel(+certMinEl.value, +certMaxEl.value);
+  });
+  certMinEl?.addEventListener('change', () => {
+    exploreState.certMinIdx = +certMinEl.value;
+    exploreState.certMaxIdx = Math.max(exploreState.certMaxIdx, exploreState.certMinIdx);
+    _go(1);
+  });
+  certMaxEl?.addEventListener('input', () => {
+    if (+certMaxEl.value < +certMinEl.value) certMinEl.value = certMaxEl.value;
+    updateDualRange('exploreCertRange', certMinEl, certMaxEl);
+    const certValEl = document.getElementById('exploreCertVal');
+    if (certValEl) certValEl.textContent = _certLabel(+certMinEl.value, +certMaxEl.value);
+  });
+  certMaxEl?.addEventListener('change', () => {
+    exploreState.certMaxIdx = +certMaxEl.value;
+    exploreState.certMinIdx = Math.min(exploreState.certMinIdx, exploreState.certMaxIdx);
     _go(1);
   });
 
@@ -190,11 +279,19 @@ function _clearFilters() {
   exploreState.minRating = 0;
   exploreState.streaming = [];
   exploreState.country = '';
-  exploreState.certification = '';
+  exploreState.certMinIdx = 0;
+  exploreState.certMaxIdx = 5;
   exploreState.query = '';
 
-  const certEl = document.getElementById('exploreCert');
-  if (certEl) certEl.value = '';
+  const certMinEl = document.getElementById('exploreCertMin');
+  const certMaxEl = document.getElementById('exploreCertMax');
+  if (certMinEl && certMaxEl) {
+    certMinEl.value = '0';
+    certMaxEl.value = '5';
+    updateDualRange('exploreCertRange', certMinEl, certMaxEl);
+    const certValEl = document.getElementById('exploreCertVal');
+    if (certValEl) certValEl.textContent = 'Todas';
+  }
   const countryEl = document.getElementById('exploreCountry');
   if (countryEl) countryEl.value = '';
   const searchEl = document.getElementById('exploreSearch');
@@ -212,11 +309,28 @@ function _clearFilters() {
   _go(1);
 }
 
+function _discoverParams() {
+  const curYear = new Date().getFullYear();
+  return {
+    contentType: exploreState.contentType,
+    genres: exploreState.genres,
+    yearMin: exploreState.yearMin > 1950 ? exploreState.yearMin : null,
+    yearMax: exploreState.yearMax < curYear ? exploreState.yearMax : null,
+    minRating: exploreState.minRating > 0 ? exploreState.minRating : null,
+    streaming: exploreState.streaming,
+    country: exploreState.country,
+    certMin: exploreState.certMinIdx > 0 ? CERT_VALUES[exploreState.certMinIdx] : null,
+    certMax: exploreState.certMaxIdx < 5 ? CERT_VALUES[exploreState.certMaxIdx] : null,
+    sortBy: exploreState.sortBy,
+  };
+}
+
 let _fetchGen = 0;
 let _fetchController = null;
 
 function _go(page) {
   exploreState.page = page;
+  _updateUrl();
   _fetch();
   globalThis.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -238,17 +352,7 @@ async function _fetch() {
     if (exploreState.query.length >= 2) {
       data = await API.exploreSearch(exploreState.query, exploreState.contentType, exploreState.page);
     } else {
-      data = await API.exploreDiscover({
-        contentType: exploreState.contentType,
-        genres: exploreState.genres,
-        yearMin: exploreState.yearMin > 1950 ? exploreState.yearMin : null,
-        yearMax: exploreState.yearMax < new Date().getFullYear() ? exploreState.yearMax : null,
-        minRating: exploreState.minRating > 0 ? exploreState.minRating : null,
-        streaming: exploreState.streaming,
-        country: exploreState.country,
-        certification: exploreState.certification,
-        sortBy: exploreState.sortBy,
-      }, exploreState.page);
+      data = await API.exploreDiscover(_discoverParams(), exploreState.page);
     }
 
     if (gen !== _fetchGen) return;

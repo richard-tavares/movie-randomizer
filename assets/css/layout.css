@@ -98,7 +98,7 @@
 }
 
 .nav-link.active {
-  color: var(--clr-text);
+  color: #ffffff;
 }
 
 .navbar-actions {

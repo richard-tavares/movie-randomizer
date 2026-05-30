@@ -32,7 +32,7 @@
   }
   function getTrendingMovies(window = 'week') { return request(`/trending/movie/${window}`); }
   function getTrendingAll(window = 'week') { return request(`/trending/all/${window}`); }
-  function getNowPlaying(page = 1) { return request('/movie/now_playing', { page }); }
+  function getNowPlaying(page = 1) { return request('/movie/now_playing', { page, region: 'BR', with_release_type: '2|3' }); }
   function getTopRatedMovies(page = 1) {
     return discover({
       sort_by: 'vote_average.desc',
@@ -162,6 +162,7 @@
   function getCredits(id) { return request(`/movie/${id}/credits`); }
   function getVideos(id) { return request(`/movie/${id}/videos`); }
   function getSimilar(id, page = 1) { return request(`/movie/${id}/similar`, { page }); }
+  function getKeywords(id, isTV = false) { return request(`/${isTV ? 'tv' : 'movie'}/${id}/keywords`); }
   function getImages(id) { return request(`/movie/${id}/images`, { include_image_language: 'en,null' }); }
   function getReleaseDates(id) { return request(`/movie/${id}/release_dates`); }
   function getTVShow(id) { return request(`/tv/${id}`, { append_to_response: 'content_ratings' }); }
@@ -198,8 +199,8 @@
           : await discover({ ...params, page });
         if (contentType === 'tv') stripAnime(data);
         if (!data.results?.length) continue;
-        const candidates = data.results.filter(m => m.poster_path && m.overview);
-        const pool = candidates.length ? candidates : data.results;
+        const candidates = data.results.filter(m => m.poster_path && m.overview && m.id !== filters.excludeId);
+        const pool = candidates.length ? candidates : data.results.filter(m => m.id !== filters.excludeId);
         const item = pool[Math.floor(Math.random() * pool.length)];
         if (item) {
           item._type = contentType;
@@ -232,10 +233,8 @@
       p.with_watch_providers = f.streaming.join('|');
       p.watch_region = 'BR';
     }
-    if (f.certification && !isTV) {
-      p.certification_country = 'BR';
-      p['certification.lte'] = f.certification;
-    }
+    if (f.keywords?.length) p.with_keywords = f.keywords.join('|');
+    _applyCertParams(p, f);
 
     switch (f.type) {
       case 'underrated':
@@ -262,6 +261,22 @@
     }
     return p;
   }
+  function _applyCertParams(p, filters) {
+    if (!filters.certMin && !filters.certMax) return;
+    p.certification_country = 'BR';
+    if (filters.certMin) p['certification.gte'] = filters.certMin;
+    if (filters.certMax) p['certification.lte'] = filters.certMax;
+  }
+
+  function _applyGenreParams(p, filters, contentType) {
+    if (contentType === 'anime') {
+      p.with_genres = filters.genres?.length ? `16,${filters.genres.join(',')}` : '16';
+      p.with_original_language = 'ja';
+    } else if (filters.genres?.length) {
+      p.with_genres = filters.genres.join('|');
+    }
+  }
+
   function _buildExploreParams(filters) {
     const { contentType = 'movie' } = filters;
     const isTV = contentType === 'tv' || contentType === 'anime';
@@ -275,14 +290,8 @@
     if (filters.minRating) p['vote_average.gte'] = filters.minRating;
     if (filters.country) p.with_origin_country = filters.country;
     if (filters.streaming?.length) { p.with_watch_providers = filters.streaming.join('|'); p.watch_region = 'BR'; }
-    if (filters.certification && !isTV) { p.certification_country = 'BR'; p['certification.lte'] = filters.certification; }
-
-    if (contentType === 'anime') {
-      p.with_genres = filters.genres?.length ? `16,${filters.genres.join(',')}` : '16';
-      p.with_original_language = 'ja';
-    } else if (filters.genres?.length) {
-      p.with_genres = filters.genres.join('|');
-    }
+    _applyCertParams(p, filters);
+    _applyGenreParams(p, filters, contentType);
     return p;
   }
 
@@ -310,7 +319,7 @@
     discover, getHiddenGemsMovies, getHiddenGemsTV, getHiddenGemsAnime, getByGenreMovies, getByMood,
     getTrendingTV, getAiringTV, getAiringAnime, discoverTV, getByGenreTV,
     getTrendingAnime,
-    getMovie, getCredits, getVideos, getSimilar, getImages, getReleaseDates,
+    getMovie, getCredits, getVideos, getSimilar, getKeywords, getImages, getReleaseDates,
     getTVShow, getTVCredits, getTVVideos, getSimilarTV,
     getWatchProviders,
     getPerson, getPersonCredits,

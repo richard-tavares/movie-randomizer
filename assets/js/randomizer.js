@@ -1,6 +1,6 @@
 const Randomizer = (() => {
   let overlay, yearMinEl, yearMaxEl, yearMinVal, yearMaxVal,
-    ratingEl, ratingVal, countryEl, certEl, genreEl, streamingEl, contentTypeEl;
+    ratingEl, ratingVal, countryEl, certMinEl, certMaxEl, certValEl, genreEl, streamingEl, contentTypeEl;
 
   const state = {
     contentTypes: [],
@@ -10,8 +10,15 @@ const Randomizer = (() => {
     minRating: 6,
     country: '',
     streaming: [],
-    certification: null,
+    certMinIdx: 0,
+    certMaxIdx: 5,
   };
+
+  function _certLabel(minIdx, maxIdx) {
+    if (minIdx === 0 && maxIdx === 5) return 'Todas';
+    if (minIdx === maxIdx) return CERT_LABELS[minIdx];
+    return `${CERT_LABELS[minIdx]} a ${CERT_LABELS[maxIdx]}`;
+  }
 
   function init() {
     overlay = document.getElementById('randomizerModal');
@@ -22,7 +29,9 @@ const Randomizer = (() => {
     ratingEl = document.getElementById('randRating');
     ratingVal = document.getElementById('randRatingVal');
     countryEl = document.getElementById('randCountry');
-    certEl = document.getElementById('randCert');
+    certMinEl = document.getElementById('randCertMin');
+    certMaxEl = document.getElementById('randCertMax');
+    certValEl = document.getElementById('randCertVal');
     genreEl = document.getElementById('randGenres');
     streamingEl = document.getElementById('randStreaming');
     contentTypeEl = document.getElementById('randContentType');
@@ -34,10 +43,19 @@ const Randomizer = (() => {
     _bindControls();
     updateDualRange('randYearRange', yearMinEl, yearMaxEl);
     updateSingleRange('randRatingRange', ratingEl);
+    updateDualRange('randCertRange', certMinEl, certMaxEl);
+  }
+
+  function _syncUI() {
+    CustomSelect.refresh(genreEl);
+    CustomSelect.refresh(streamingEl);
+    CustomSelect.refresh(countryEl);
+    CustomSelect.refresh(contentTypeEl);
   }
 
   function open() {
     if (!overlay) return;
+    _syncUI();
     overlay.showModal();
     document.body.style.overflow = 'hidden';
     setTimeout(() => overlay.querySelector('.modal-close')?.focus(), 300);
@@ -63,13 +81,6 @@ const Randomizer = (() => {
     });
     state.genres = [];
     genreEl.dispatchEvent(new Event('change'));
-  }
-
-  function _syncCertVisibility() {
-    const certSection = certEl?.closest('.filter-section');
-    if (!certSection) return;
-    const hasMovie = state.contentTypes.length === 0 || state.contentTypes.includes('movie');
-    certSection.style.display = hasMovie ? '' : 'none';
   }
 
   function _bindControls() {
@@ -102,7 +113,25 @@ const Randomizer = (() => {
     });
 
     countryEl?.addEventListener('change', () => { state.country = countryEl.value; });
-    certEl?.addEventListener('change', () => { state.certification = certEl.value || null; });
+
+    certMinEl?.addEventListener('input', () => {
+      if (+certMinEl.value > +certMaxEl.value) certMaxEl.value = certMinEl.value;
+      updateDualRange('randCertRange', certMinEl, certMaxEl);
+      if (certValEl) certValEl.textContent = _certLabel(+certMinEl.value, +certMaxEl.value);
+    });
+    certMinEl?.addEventListener('change', () => {
+      state.certMinIdx = +certMinEl.value;
+      state.certMaxIdx = Math.max(state.certMaxIdx, state.certMinIdx);
+    });
+    certMaxEl?.addEventListener('input', () => {
+      if (+certMaxEl.value < +certMinEl.value) certMinEl.value = certMaxEl.value;
+      updateDualRange('randCertRange', certMinEl, certMaxEl);
+      if (certValEl) certValEl.textContent = _certLabel(+certMinEl.value, +certMaxEl.value);
+    });
+    certMaxEl?.addEventListener('change', () => {
+      state.certMaxIdx = +certMaxEl.value;
+      state.certMinIdx = Math.min(state.certMinIdx, state.certMaxIdx);
+    });
 
     genreEl?.addEventListener('change', () => {
       state.genres = Array.from(genreEl.selectedOptions).map(o => Number(o.value)).filter(Boolean);
@@ -115,7 +144,6 @@ const Randomizer = (() => {
     contentTypeEl?.addEventListener('change', () => {
       state.contentTypes = Array.from(contentTypeEl.selectedOptions).map(o => o.value);
       _buildGenreOptions();
-      _syncCertVisibility();
     });
 
     overlay?.querySelector('.modal-close')?.addEventListener('click', close);
@@ -144,7 +172,14 @@ const Randomizer = (() => {
     if (yearMinEl && yearMaxEl) updateDualRange('randYearRange', yearMinEl, yearMaxEl);
     if (ratingEl) { ratingEl.value = 6; ratingVal.textContent = '6.0'; updateSingleRange('randRatingRange', ratingEl); }
     if (countryEl) countryEl.value = '';
-    if (certEl) certEl.value = '';
+    state.certMinIdx = 0;
+    state.certMaxIdx = 5;
+    if (certMinEl && certMaxEl) {
+      certMinEl.value = '0';
+      certMaxEl.value = '5';
+      updateDualRange('randCertRange', certMinEl, certMaxEl);
+      if (certValEl) certValEl.textContent = 'Todas';
+    }
 
     Array.from(genreEl?.options || []).forEach(o => { o.selected = false; });
     if (genreEl) genreEl.dispatchEvent(new Event('change'));
@@ -163,7 +198,12 @@ const Randomizer = (() => {
     try {
       const pool = state.contentTypes.length > 0 ? state.contentTypes : ['movie', 'tv', 'anime'];
       const contentType = pool[Math.floor(Math.random() * pool.length)];
-      const result = await API.randomize({ ...state, contentType });
+      const result = await API.randomize({
+        ...state,
+        contentType,
+        certMin: state.certMinIdx > 0 ? CERT_VALUES[state.certMinIdx] : null,
+        certMax: state.certMaxIdx < 5 ? CERT_VALUES[state.certMaxIdx] : null,
+      });
       close();
       RandResult.show(result, { ...state, contentType });
     } catch (err) {

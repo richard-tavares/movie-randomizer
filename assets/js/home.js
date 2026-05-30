@@ -3,12 +3,44 @@ let heroIndex = 0;
 let heroTimer = null;
 let _diceRafId = null;
 
+const _HOME_STATE_KEY = 'mr_home_state';
+const TTL_2H = 2 * 60 * 60 * 1000;
+function _saveHomeState(partial) {
+  const cur = localGet(_HOME_STATE_KEY) || {};
+  localSet(_HOME_STATE_KEY, { ...cur, ...partial }, TTL_2H);
+}
+function _getHomeState() {
+  return localGet(_HOME_STATE_KEY) || {};
+}
+
+const TTL_4H  = 4  * 60 * 60 * 1000;
+const TTL_12H = 12 * 60 * 60 * 1000;
+const TTL_24H = 24 * 60 * 60 * 1000;
+
+async function _cachedCarousel(trackId, fetchFn, opts, cacheKey, ttl) {
+  const cached = localGet(cacheKey);
+  if (cached) {
+    const track = document.getElementById(trackId);
+    if (track) {
+      _renderCarouselTrack(track, cached, opts.type);
+    }
+    return;
+  }
+  await loadCarousel(trackId, async () => {
+    const data = await fetchFn();
+    localSet(cacheKey, (data.results || []).filter(m => m.poster_path), ttl);
+    return data;
+  }, opts);
+}
+
 async function initHero() {
   try {
     const data = await API.getTrendingAll('week');
     heroMovies = (data.results || []).filter(m => m.backdrop_path && m.poster_path && m.overview && m.media_type !== 'person').slice(0, 10);
     if (heroMovies.length) {
-      renderHero(heroMovies[0], true);
+      const savedIdx = _getHomeState().heroIndex || 0;
+      heroIndex = savedIdx < heroMovies.length ? savedIdx : 0;
+      renderHero(heroMovies[heroIndex], true);
       buildHeroDots();
       heroTimer = setInterval(advanceHero, 7000);
     }
@@ -79,7 +111,7 @@ function buildHeroDots() {
     const dot = document.createElement('button');
     dot.className = 'hero-dot' + (i === 0 ? ' active' : '');
     dot.setAttribute('aria-label', `Filme ${i + 1}`);
-    dot.addEventListener('click', () => { heroIndex = i; renderHero(heroMovies[i]); resetHeroTimer(); });
+    dot.addEventListener('click', () => { heroIndex = i; renderHero(heroMovies[i]); resetHeroTimer(); _saveHomeState({ heroIndex: i }); });
     container.appendChild(dot);
   });
 }
@@ -94,6 +126,7 @@ function updateHeroDot(idx) {
 function advanceHero() {
   if (!heroMovies.length) return;
   heroIndex = (heroIndex + 1) % heroMovies.length;
+  _saveHomeState({ heroIndex });
   renderHero(heroMovies[heroIndex]);
 }
 
@@ -238,18 +271,29 @@ function initVibeSelector() {
       cards.forEach(c => c.classList.remove('active'));
       if (wasActive) {
         document.getElementById('vibeResults')?.classList.add('hidden');
+        _saveHomeState({ activeVibe: null });
         return;
       }
       card.classList.add('active');
+      _saveHomeState({ activeVibe: vibe });
       await fetchVibe(vibe);
     });
   });
+
+  const savedVibe = _getHomeState().activeVibe;
+  if (savedVibe) {
+    const vibeCard = document.querySelector(`.vibe-card[data-vibe="${savedVibe}"]`);
+    if (vibeCard) {
+      vibeCard.classList.add('active');
+      fetchVibe(savedVibe);
+    }
+  }
 }
 
 let _genreCurrentType = 'movie';
 let _genreGen = 0;
 
-function _buildGenreStrip(contentType) {
+function _buildGenreStrip(contentType, initialGenreId = null) {
   _genreCurrentType = contentType;
   const strip = document.getElementById('genreStrip');
   if (!strip) return;
@@ -270,6 +314,7 @@ function _buildGenreStrip(contentType) {
     pill.addEventListener('click', async () => {
       strip.querySelectorAll('.genre-pill').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
+      _saveHomeState({ genreType: contentType, genreId: g.id });
 
       const track = document.getElementById('genreCarouselTrack');
       if (!track) return;
@@ -316,7 +361,10 @@ function _buildGenreStrip(contentType) {
     strip.appendChild(pill);
   });
 
-  strip.querySelector('.genre-pill')?.click();
+  const initialPill = initialGenreId
+    ? strip.querySelector(`.genre-pill[data-id="${initialGenreId}"]`)
+    : null;
+  (initialPill || strip.querySelector('.genre-pill'))?.click();
 }
 
 function initGenreStrip() {
@@ -325,22 +373,28 @@ function initGenreStrip() {
     if (!btn) return;
     document.querySelectorAll('#genreTypeGroup .segmented-control-btn')
       .forEach(b => b.classList.toggle('active', b === btn));
+    _saveHomeState({ genreType: btn.dataset.type, genreId: null });
     _buildGenreStrip(btn.dataset.type);
   });
 
-  _buildGenreStrip('movie');
+  const state = _getHomeState();
+  const savedType = state.genreType || 'movie';
+
+  if (savedType !== 'movie') {
+    document.querySelectorAll('#genreTypeGroup .segmented-control-btn')
+      .forEach(b => b.classList.toggle('active', b.dataset.type === savedType));
+  }
+
+  _buildGenreStrip(savedType, state.genreId || null);
 }
 
 async function initDailyPick() {
   const card = document.getElementById('dailyPickCard');
   if (!card) return;
   const today = new Date().toISOString().substring(0, 10);
-  const cached = sessionStorage.getItem('mr_daily_' + today);
+  const cacheKey = `mr_daily_${today}`;
 
-  let movie;
-  if (cached) {
-    try { movie = JSON.parse(cached); } catch { }
-  }
+  let movie = localGet(cacheKey);
 
   if (!movie) {
     try {
@@ -348,7 +402,7 @@ async function initDailyPick() {
       const data = await API.discover({ sort_by: 'vote_average.desc', 'vote_count.gte': 5000, page });
       const pool = (data.results || []).filter(m => m.backdrop_path && m.poster_path && m.overview);
       movie = pool[new Date().getDate() % pool.length];
-      if (movie) sessionStorage.setItem('mr_daily_' + today, JSON.stringify(movie));
+      if (movie) localSet(cacheKey, movie, TTL_24H);
     } catch (err) {
       console.warn('Daily pick failed:', err);
       card.innerHTML = '<p class="text-dimmed text-sm">Indisponível.</p>';
@@ -381,6 +435,7 @@ async function initDailyPick() {
   `;
 
   document.getElementById('dailyActions')?.appendChild(buildActionButtons(movie, ctype));
+  card.querySelector('.daily-poster')?.addEventListener('click', () => goToTitle(movie.id, ctype));
 }
 
 function initRandDice() {
@@ -545,7 +600,7 @@ async function _loadTopRated(type) {
   const gen = ++_topRatedGen;
 
   const cacheKey = `mr_toprated_${type}`;
-  const cached = sessionGet(cacheKey);
+  const cached = localGet(cacheKey);
   if (cached) {
     _renderCarouselTrack(track, cached, type);
     return;
@@ -567,7 +622,7 @@ async function _loadTopRated(type) {
       return;
     }
 
-    sessionSet(cacheKey, items);
+    localSet(cacheKey, items, TTL_24H);
     _renderCarouselTrack(track, items, type);
   } catch (err) {
     if (gen !== _topRatedGen || err.name === 'AbortError') return;
@@ -581,9 +636,15 @@ function initTopRated() {
     if (!btn) return;
     document.querySelectorAll('#topRatedTypeGroup .segmented-control-btn')
       .forEach(b => b.classList.toggle('active', b === btn));
+    _saveHomeState({ topRatedType: btn.dataset.type });
     _loadTopRated(btn.dataset.type);
   });
-  _loadTopRated('movie');
+  const savedType = _getHomeState().topRatedType || 'movie';
+  if (savedType !== 'movie') {
+    document.querySelectorAll('#topRatedTypeGroup .segmented-control-btn')
+      .forEach(b => b.classList.toggle('active', b.dataset.type === savedType));
+  }
+  _loadTopRated(savedType);
 }
 
 function initHiddenGems() {
@@ -592,9 +653,15 @@ function initHiddenGems() {
     if (!btn) return;
     document.querySelectorAll('#hiddenGemsTypeGroup .segmented-control-btn')
       .forEach(b => b.classList.toggle('active', b === btn));
+    _saveHomeState({ hiddenGemsType: btn.dataset.type });
     _loadHiddenGems(btn.dataset.type);
   });
-  _loadHiddenGems('movie');
+  const savedType = _getHomeState().hiddenGemsType || 'movie';
+  if (savedType !== 'movie') {
+    document.querySelectorAll('#hiddenGemsTypeGroup .segmented-control-btn')
+      .forEach(b => b.classList.toggle('active', b.dataset.type === savedType));
+  }
+  _loadHiddenGems(savedType);
 }
 
 async function initHomePage() {
@@ -606,12 +673,12 @@ async function initHomePage() {
   document.getElementById('randomizerBtnMobile')?.addEventListener('click', () => Randomizer.quick());
   initHero();
   initDailyPick();
-  loadCarousel('nowPlayingTrack', () => API.getNowPlaying(), { type: 'movie' });
+  _cachedCarousel('nowPlayingTrack', () => API.getNowPlaying(), { type: 'movie' }, 'mr_now_playing', TTL_12H);
   initAiringTV();
   initAiringAnime();
-  loadCarousel('trendingTrack', () => API.getTrendingMovies('week'), { type: 'movie' });
-  loadCarousel('trendingTVTrack', () => API.getTrendingTV('week'), { type: 'tv' });
-  loadCarousel('trendingAnimeTrack', () => API.getTrendingAnime(), { type: 'anime' });
+  _cachedCarousel('trendingTrack', () => API.getTrendingMovies('week'), { type: 'movie' }, 'mr_trending_movies', TTL_4H);
+  _cachedCarousel('trendingTVTrack', () => API.getTrendingTV('week'), { type: 'tv' }, 'mr_trending_tv', TTL_4H);
+  _cachedCarousel('trendingAnimeTrack', () => API.getTrendingAnime(), { type: 'anime' }, 'mr_trending_anime', TTL_4H);
   initVibeSelector();
   initTopRated();
   initHiddenGems();
@@ -620,12 +687,47 @@ async function initHomePage() {
   window.addEventListener('pagehide', () => {
     clearInterval(heroTimer);
     cancelAnimationFrame(_diceRafId);
+    _saveHomeState({ scrollY: window.scrollY });
   });
+
+  const { scrollY } = _getHomeState();
+  if (scrollY) {
+    history.scrollRestoration = 'manual';
+    requestAnimationFrame(() => window.scrollTo({ top: scrollY, behavior: 'instant' }));
+  }
 }
 
-async function _initAiringSection(trackId, fetchFn, emptyMsg) {
+function _renderAiringTrack(track, details, emptyMsg) {
+  track.innerHTML = '';
+  let added = 0;
+  details
+    .filter(Boolean)
+    .sort((a, b) => {
+      const da = a.last_episode_to_air?.air_date || '';
+      const db = b.last_episode_to_air?.air_date || '';
+      return db.localeCompare(da);
+    })
+    .forEach(detail => {
+      const card = buildAiringCard(detail);
+      if (card) { track.appendChild(card); added++; }
+    });
+
+  if (!added) {
+    track.innerHTML = `<p class="text-dimmed text-sm" style="padding:1rem">${emptyMsg}</p>`;
+    return;
+  }
+  createCarousel(track);
+}
+
+async function _initAiringSection(trackId, fetchFn, emptyMsg, cacheKey) {
   const track = document.getElementById(trackId);
   if (!track) return;
+
+  const cached = localGet(cacheKey);
+  if (cached) {
+    _renderAiringTrack(track, cached, emptyMsg);
+    return;
+  }
 
   track.innerHTML = '<div class="loading-state" role="status" aria-label="Carregando"><div class="spinner"></div></div>';
 
@@ -633,37 +735,21 @@ async function _initAiringSection(trackId, fetchFn, emptyMsg) {
     const data = await fetchFn();
     const shows = (data.results || []).filter(s => s.poster_path).slice(0, 15);
     const details = await batchedAll(shows, s => API.getTVShow(s.id).catch(() => null), 5);
+    const valid = details.filter(Boolean);
 
-    track.innerHTML = '';
-    let added = 0;
-    details
-      .filter(Boolean)
-      .sort((a, b) => {
-        const da = a.last_episode_to_air?.air_date || '';
-        const db = b.last_episode_to_air?.air_date || '';
-        return db.localeCompare(da);
-      })
-      .forEach(detail => {
-        const card = buildAiringCard(detail);
-        if (card) { track.appendChild(card); added++; }
-      });
-
-    if (!added) {
-      track.innerHTML = `<p class="text-dimmed text-sm" style="padding:1rem">${emptyMsg}</p>`;
-      return;
-    }
-    createCarousel(track);
+    localSet(cacheKey, valid, TTL_4H);
+    _renderAiringTrack(track, valid, emptyMsg);
   } catch {
     track.innerHTML = '<p class="text-dimmed text-sm" style="padding:1rem">Erro ao carregar.</p>';
   }
 }
 
 function initAiringAnime() {
-  return _initAiringSection('airingAnimeTrack', () => API.getAiringAnime(), 'Nenhum anime disponível.');
+  return _initAiringSection('airingAnimeTrack', () => API.getAiringAnime(), 'Nenhum anime disponível.', 'mr_airing_anime');
 }
 
 function initAiringTV() {
-  return _initAiringSection('airingTVTrack', () => API.getAiringTV(), 'Nenhuma série disponível.');
+  return _initAiringSection('airingTVTrack', () => API.getAiringTV(), 'Nenhuma série disponível.', 'mr_airing_tv');
 }
 
 document.addEventListener('DOMContentLoaded', initHomePage);
