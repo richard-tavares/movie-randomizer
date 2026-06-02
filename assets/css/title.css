@@ -227,6 +227,15 @@
   line-height: 1.5;
 }
 
+.detail-link {
+  color: var(--clr-primary-light);
+  text-decoration: none;
+}
+
+.detail-link:hover {
+  text-decoration: underline;
+}
+
 .movie-cast-section .carousel-btn {
   top: 55px;
 }

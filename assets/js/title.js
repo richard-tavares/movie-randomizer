@@ -134,13 +134,29 @@ function _renderGenres(item) {
   }
 }
 
+function _personLink(id, name) {
+  return `<a href="person.html?id=${id}" class="detail-link">${escHtml(name)}</a>`;
+}
+
+const _STATUS_MAP = {
+  'Returning Series': 'Em exibição',
+  'Ended': 'Concluída',
+  'Canceled': 'Cancelada',
+  'In Production': 'Em produção',
+  'Post Production': 'Pós-produção',
+  'Planned': 'Planejada',
+  'Rumored': 'Especulado',
+  'Pilot': 'Piloto',
+  'Released': 'Lançado',
+};
+
 function _buildTVRows(item) {
   const rows = [];
-  const creators = item.created_by?.slice(0, 3).map(c => c.name).join(', ');
+  const creators = item.created_by?.slice(0, 3).map(c => _personLink(c.id, c.name)).join(', ');
   if (creators) rows.push({ k: 'Criado por', v: creators });
   if (item.number_of_seasons) rows.push({ k: 'Temporadas', v: item.number_of_seasons });
   if (item.number_of_episodes) rows.push({ k: 'Episódios', v: item.number_of_episodes });
-  if (item.status) rows.push({ k: 'Status', v: escHtml(item.status) });
+  if (item.status) rows.push({ k: 'Status', v: _STATUS_MAP[item.status] || escHtml(item.status) });
   if (item.first_air_date) rows.push({ k: 'Estreia', v: formatDate(item.first_air_date) });
   if (item.last_air_date) rows.push({ k: 'Último Ep.', v: formatDate(item.last_air_date) });
   if (item.networks?.length) rows.push({ k: 'Rede', v: item.networks.slice(0, 2).map(n => escHtml(n.name)).join(', ') });
@@ -152,11 +168,11 @@ function _buildMovieRows(item, credits) {
   const rows = [];
   const director = credits?.crew?.find(p => p.job === 'Director');
   const writers = credits?.crew?.filter(p => ['Screenplay', 'Writer', 'Story'].includes(p.job)).slice(0, 3);
-  if (director) rows.push({ k: 'Direção', v: director.name });
+  if (director) rows.push({ k: 'Direção', v: _personLink(director.id, director.name) });
   if (writers?.length) rows.push({ k: 'Roteiro', v: writers.map(w => w.name).join(', ') });
   if (item.budget > 0) rows.push({ k: 'Orçamento', v: formatMoney(item.budget) });
   if (item.revenue > 0) rows.push({ k: 'Bilheteria', v: formatMoney(item.revenue) });
-  if (item.status) rows.push({ k: 'Status', v: escHtml(item.status) });
+  if (item.status) rows.push({ k: 'Status', v: _STATUS_MAP[item.status] || escHtml(item.status) });
   if (item.release_date) rows.push({ k: 'Lançamento', v: formatDate(item.release_date) });
   if (item.production_companies?.length) rows.push({ k: 'Produção', v: item.production_companies.slice(0, 2).map(c => escHtml(c.name)).join(', ') });
   if (item.vote_count > 0) rows.push({ k: 'Avaliações', v: item.vote_count.toLocaleString('pt-BR') });
