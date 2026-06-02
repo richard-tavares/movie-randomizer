@@ -227,6 +227,8 @@ function buildCard(movie, opts = {}) {
   let _lpTimer = null;
   let _lpActivated = false;
 
+  card.addEventListener('contextmenu', e => e.preventDefault());
+
   card.addEventListener('touchstart', () => {
     _lpActivated = false;
     _lpTimer = setTimeout(() => {

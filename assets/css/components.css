@@ -175,6 +175,16 @@
   z-index: var(--z-raised);
 }
 
+@media (hover: none) {
+  .content-card {
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+  .content-card-poster img {
+    pointer-events: none;
+  }
+}
+
 .content-card-poster {
   position: relative;
   aspect-ratio: var(--card-ratio);
