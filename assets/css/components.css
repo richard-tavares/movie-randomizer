@@ -175,15 +175,6 @@
   z-index: var(--z-raised);
 }
 
-@media (hover: none) {
-  .content-card {
-    -webkit-touch-callout: none;
-    user-select: none;
-  }
-  .content-card-poster img {
-    pointer-events: none;
-  }
-}
 
 .content-card-poster {
   position: relative;
@@ -239,14 +230,13 @@
   gap: var(--sp-2);
 }
 
-.content-card:hover .content-card-overlay,
-.content-card.overlay-open .content-card-overlay {
+.content-card:hover .content-card-overlay {
   opacity: 1;
 }
 
 @media (hover: none) {
-  .content-card:hover .content-card-overlay {
-    opacity: 0;
+  .content-card-overlay {
+    display: none;
   }
 }
 
