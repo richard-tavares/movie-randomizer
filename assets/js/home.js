@@ -559,6 +559,7 @@ function initDice3d() {
   }
 
   tick();
+  return () => { _diceRafId = requestAnimationFrame(tick); };
 }
 
 let _hiddenGemsGen = 0;
@@ -696,7 +697,7 @@ function initHiddenGems() {
 async function initHomePage() {
   initSearch();
   initRandDice();
-  initDice3d();
+  const resumeDice = initDice3d();
   Randomizer.init();
 
   document.getElementById('randomizerBtnMobile')?.addEventListener('click', () => Randomizer.quick());
@@ -717,6 +718,12 @@ async function initHomePage() {
     clearInterval(heroTimer);
     cancelAnimationFrame(_diceRafId);
     _saveHomeState({ scrollY: window.scrollY });
+  });
+
+  window.addEventListener('pageshow', e => {
+    if (!e.persisted) return;
+    resumeDice();
+    heroTimer = setInterval(advanceHero, 7000);
   });
 
   const { scrollY } = _getHomeState();
