@@ -216,13 +216,36 @@ function buildCard(movie, opts = {}) {
   card.querySelector('.content-card-add').addEventListener('click', (e) => {
     e.stopPropagation();
     toggleWatchlist(movie, e.currentTarget, 'want');
+    card.classList.remove('overlay-open');
   });
   card.querySelector('.content-card-fav').addEventListener('click', (e) => {
     e.stopPropagation();
     toggleWatchlist(movie, e.currentTarget, 'favorite');
+    card.classList.remove('overlay-open');
   });
 
-  card.addEventListener('click', () => goToTitle(id, contentType));
+  let _lpTimer = null;
+  let _lpActivated = false;
+
+  card.addEventListener('touchstart', () => {
+    _lpActivated = false;
+    _lpTimer = setTimeout(() => {
+      _lpActivated = true;
+      document.querySelectorAll('.content-card.overlay-open').forEach(c => { if (c !== card) c.classList.remove('overlay-open'); });
+      card.classList.add('overlay-open');
+    }, 500);
+  }, { passive: true });
+
+  card.addEventListener('touchmove', () => { clearTimeout(_lpTimer); }, { passive: true });
+
+  card.addEventListener('touchend', () => { clearTimeout(_lpTimer); });
+
+  card.addEventListener('click', (e) => {
+    if (_lpActivated) { _lpActivated = false; return; }
+    if (card.classList.contains('overlay-open')) { card.classList.remove('overlay-open'); return; }
+    goToTitle(id, contentType);
+  });
+
   return card;
 }
 
